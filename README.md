@@ -1,2 +1,2 @@
-# CNN patch classifier for segmentation of tumors in the liver
+# CNN patch classifier for segmentation of liver tumors
 
