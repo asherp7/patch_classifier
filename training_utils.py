@@ -1,6 +1,15 @@
 import numpy as np
 import imgaug as ia
+import tensorflow as tf
 import imgaug.augmenters as iaa
+from keras.backend.tensorflow_backend import set_session
+
+def limit_gpu_memory(memory_fraction, gpu_serial_number='0'):
+    config = tf.ConfigProto()
+    config.gpu_options.visible_device_list = gpu_serial_number
+    config.gpu_options.per_process_gpu_memory_fraction = memory_fraction
+    set_session(tf.Session(config=config))
+
 
 seq = iaa.Sequential([
     iaa.Fliplr(0.5), # horizontal flips
