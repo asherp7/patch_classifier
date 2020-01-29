@@ -6,39 +6,30 @@ import numpy as np
 import os
 
 
-def predict_nifti( model, path_to_ct_scan, output_path, path_to_liver_segmentation, debug = False,save_array = False):
+def predict_nifti(model, path_to_weights, path_to_ct_scan, path_to_liver_segmentation, output_path):
     """
-    Predict
+    Use model and weights to predict tumor probability map on ct nifti in the ROI given by the liver segmentation.
     :param model: a Keras model used for predicting patches.
     :param path_to_weights: path to weights that are loaded into model.
     :param path_to_ct_scan: Path to nifti CT scan.
     :param path_to_liver_segmentation: path to nifti file containing liver segmentation.
-    :param debug: debug mode with text output.
+    :param output_path: path into which to save the output probability map
     :param save_array: flag to save the array for debug mode.
-    :return: tumor probability map
     """
+    model.load_weights(path_to_weights)
     scan_name = os.path.basename(path_to_ct_scan)
-    if debug:
-
-        predictions = np.loadtxt(os.path.join(output_path, 'predictions.txt'))
-        index_array = np.loadtxt(os.path.join(output_path, 'indices.txt'))
-        print(index_array.shape)
-    else:
-
-        prediction_generator = PredictionGenerator(path_to_ct_scan, path_to_liver_segmentation)
-        predictions = model.predict_generator(prediction_generator, verbose=1)
-        index_array = prediction_generator.index_array
-        if save_array:
-            np.savetxt(os.path.join(output_path, 'predictions.txt'), predictions)
-            np.savetxt(os.path.join(output_path, 'indices.txt'), prediction_generator.index_array)
-
+    # Use model for prediction:
+    prediction_generator = PredictionGenerator(path_to_ct_scan, path_to_liver_segmentation)
+    predictions = model.predict_generator(prediction_generator, verbose=1)
+    index_array = prediction_generator.index_array
+    # create tumor probability map:
     ct_scan = nib.load(path_to_ct_scan)
     prediction_probability_map = construct_3d_arry(predictions[:, 1], index_array, ct_scan.get_fdata().shape)
     output_filepath = os.path.join(output_path, scan_name)
     new_img = nib.Nifti1Image(prediction_probability_map, ct_scan.affine)
+    # save tumor probability map:
     nib.save(new_img, output_filepath)
-    if debug:
-        print('saved file to:', output_filepath)
+    print('saved file to:', output_filepath)
 
 
 def construct_3d_arry(predictions, indices, arr_shape):
@@ -60,6 +51,5 @@ if __name__ == '__main__':
     # limit_gpu_memory(memory_fraction)
     model = get_model()
     model.summary()
-    model.load_weights(path_to_weights)
-    predict_nifti(model, path_to_ct_scan, output_path,path_to_liver_segmentation)
+    predict_nifti(model, path_to_weights, path_to_ct_scan, path_to_liver_segmentation, output_path)
 
