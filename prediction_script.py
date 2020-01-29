@@ -44,18 +44,17 @@ def predict_nifti( model, path_to_ct_scan, output_path, path_to_liver_segmentati
 def construct_3d_arry(predictions, indices, arr_shape):
     arr = np.zeros(arr_shape)
     for i in range(predictions.shape[0]):
-        # for the construction of nifti we are flipping x and y.
-        # TODO: Check if we can remove the drift here after the generator again fix.
-        x, y, z = int(indices[i, 1])+17, int(indices[i, 0])+17, int(indices[i, 2])
-        arr[x, y, z] = predictions[i]
+        y, x, z = int(indices[i, 0]), int(indices[i, 1]), int(indices[i, 2])
+        arr[y, x, z] = predictions[i]
     return arr
 
 
 if __name__ == '__main__':
-    path_to_ct_scan = 'C:/Users/Adi/Desktop/follow_up/data/BL11.nii.gz'
-    path_to_liver_segmentation = 'C:/Users/Adi/Desktop/follow_up/data/BL11_liverseg.nii.gz'
-    path_to_weights = 'C:/Users/Adi/Desktop/follow_up/data/weights-01-0.93.hdf5'
-    output_path = 'C:/Users/Adi/Desktop/follow_up/outputs'
+    path_to_ct_scan =  '/cs/labs/josko/asherp7/example_cases/case11/BL/BL11.nii.gz'
+    path_to_liver_segmentation = '/cs/labs/josko/asherp7/example_cases/case11/BL/BL11_liverseg.nii.gz'
+    path_to_weights = '/mnt/local/aszeskin/asher/weights/weights-01-0.93.hdf5'
+    output_path = '/cs/labs/josko/asherp7/follow_up/outputs'
+
     # Uncomment to enable limitation of gpu memory.
     # memory_fraction = 0.2
     # limit_gpu_memory(memory_fraction)

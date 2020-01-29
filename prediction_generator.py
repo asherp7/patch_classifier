@@ -52,18 +52,11 @@ class PredictionGenerator(keras.utils.Sequence):
         # Generate data
         for i, ID in enumerate(list_IDs_temp):
             # Store sample
-            patch, (x,y,z) = self.patch_list[ID]
-            X[i,] = np.expand_dims(patch, axis=-1)
-            # Adding the drift of the dim to the generator indices.
-            # so we will get the middle of the patch instead of the left upper patch.
-            # TODO: check why the generator fails, seems like we get StopIteration: tuple index out of range
-            # indices[i,] = np.asarray([x + int(self.dim[0]/2),
-            #                           y + int(self.dim[1]/2),
-            #                           z + int(self.dim[3]/2)])
-            indices[i,] = np.asarray([x,
-                                      y,
-                                      z])
-
+            patch, (y, x, z) = self.patch_list[ID]
+            X[i, ] = np.expand_dims(patch, axis=-1)
+            indices[i, ] = np.asarray([y,
+                                       x,
+                                       z])
         # Clip values:
         np.clip(X, self.min_clip_value, self.max_clip_value, out=X)
 
@@ -88,7 +81,11 @@ class PredictionGenerator(keras.utils.Sequence):
                     if x + self.patch_size < columns and y + self.patch_size < rows:  # discard border patches
                         if self.is_patch_center_in_mask(x, y, z, self.organ_segmentation):
                             patch = self.scan_data[y:y+self.patch_size, x:x+self.patch_size, z]
-                            patch_list.append((patch, (x, y, z)))
+                            # Adding to left corner indices: patch_dim // 2:
+                            # so we will get the middle of the patch instead of the left upper corner of the patch.
+                            y_center = y + self.dim[1] // 2
+                            x_center = x + self.dim[0] // 2
+                            patch_list.append((patch, (y_center, x_center, z)))
         return patch_list
 
     def is_patch_center_in_mask(self, patch_x, patch_y, patch_z, roi_mask):
