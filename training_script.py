@@ -2,15 +2,8 @@ import os
 from model import get_model
 from generator import DataGenerator
 from keras.callbacks import ModelCheckpoint
-import tensorflow as tf
-from keras.backend.tensorflow_backend import set_session
+from training_utils import limit_gpu_memory
 
-
-def limit_gpu_memory(memory_fraction, gpu_serial_number='0'):
-    config = tf.ConfigProto()
-    config.gpu_options.visible_device_list = gpu_serial_number
-    config.gpu_options.per_process_gpu_memory_fraction = memory_fraction
-    set_session(tf.Session(config=config))
 
 
 def create_weights_save_dir(weight_dir, train_title):

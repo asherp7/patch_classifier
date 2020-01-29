@@ -8,7 +8,7 @@ def create_training_set():
     roi_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL_liverSeg'
     tumor_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL_onlytumors'
     output_path = '/mnt/local/aszeskin/asher/liver_data'
-    output_filename = 'BL_patches.h5'
+    output_filename = 'BL_all_patches.h5'
     roi_suffix = '_liverseg'
     tumor_suffix = '_Tumors'
     patch_size = 35
@@ -35,7 +35,7 @@ def create_validation_set():
     check_file(output_path, output_filename)
 
 
-def create_trainin_and_validation_from_BL():
+def create_training_and_validation_from_BL():
     nifti_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL'
     roi_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL_liverSeg'
     tumor_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL_onlytumors'
@@ -61,6 +61,6 @@ def check_file(output_path, file_name):
 
 
 if __name__ == '__main__':
-    # create_training_set()
+    create_training_set()
     # create_validation_set()
-    create_trainin_and_validation_from_BL()
+    # create_training_and_validation_from_BL()

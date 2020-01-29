@@ -8,7 +8,7 @@ import os
 
 class Transform2h5:
     def __init__(self, nifti_dir_path, output_dir_path, output_filename, orientation, patch_size, sampling_step,
-                 roi_path, roi_suffix, tumor_data_path, tumor_suffix, padding=None, augmetations=None):
+                 roi_path, roi_suffix, tumor_data_path, tumor_suffix, padding=None, augmetations=None, balance=True):
         self.nifti_dir_path = nifti_dir_path
         self.output_dir_path = output_dir_path
         self.orientation = orientation
@@ -21,10 +21,12 @@ class Transform2h5:
         self.roi_suffix = roi_suffix
         self.tumor_data_path = tumor_data_path
         self.tumor_suffix = tumor_suffix
+        self.balance_patches = balance
         self.patches_datset_name = 'patches'
         self.label_dataset_name = 'labels'
         self.tumor_indices_name = 'tumor_idx'
-        self.non_tumor_indices_name = 'non_tumor_idx'
+        self.patch_dict_name = 'patch_dict'
+        # self.non_tumor_indices_name = 'non_tumor_idx'
         self.num_saved_patches = 0
 
     def read_nifti(self, nifti_filepath):
@@ -63,9 +65,10 @@ class Transform2h5:
         tumor_data = self.get_nifti_data(tumor)
         patch_list, patch_labels, tumor_patches_indices, non_tumor_patches_indices = \
             self.split_arr_into_patches(data, roi_data, tumor_data)
-        # balance out nifti patches:
-        patch_list, patch_labels, tumor_patches_indices, non_tumor_patches_indices = \
-            self.balance_scan_patches(patch_list, patch_labels, tumor_patches_indices, non_tumor_patches_indices)
+        if self.balance_patches:
+            # balance out nifti patches:
+            patch_list, patch_labels, tumor_patches_indices, non_tumor_patches_indices = \
+                self.balance_scan_patches(patch_list, patch_labels, tumor_patches_indices, non_tumor_patches_indices)
 
         # move from single nifti indices, to global indices:
         tumor_patches_indices, non_tumor_patches_indices = \
