@@ -62,7 +62,8 @@ class PredictionGenerator(keras.utils.Sequence):
         # Normalize:
         min_value = np.min(X)
         max_value = np.max(X)
-        X = (X - min_value) / (max_value - min_value)
+        if max_value - min_value > 0:
+            X = (X - min_value) / (max_value - min_value)
 
         # save indices:
         # Please notice that x,y,z in numpy array is not the same as nifti. for the generation of the

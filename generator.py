@@ -70,7 +70,8 @@ class DataGenerator(keras.utils.Sequence):
         # Normalize:
         min_value = np.min(X)
         max_value = np.max(X)
-        X = (X - min_value) / (max_value - min_value)
+        if max_value - min_value > 0:
+            X = (X - min_value) / (max_value - min_value)
 
         return X, keras.utils.to_categorical(y, num_classes=self.n_classes)
 

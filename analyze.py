@@ -42,7 +42,7 @@ def get_ct_liver_tumor_filepaths_list(ct_dir_path, roi_dir_path, tumor_dir_path,
             print(tumor_file_path, 'is missing!')
             continue
         scan_file_path = os.path.join(ct_dir_path, filename)
-        prediction_file_path = os.path.join(prediction_file_path, filename)
+        prediction_file_path = os.path.join(prediction_dir_path, filename)
         file_names_list.append((scan_file_path, roi_file_path, tumor_file_path, prediction_file_path))
     return file_names_list
 

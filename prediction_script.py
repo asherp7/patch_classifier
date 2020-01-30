@@ -40,16 +40,49 @@ def construct_3d_arry(predictions, indices, arr_shape):
     return arr
 
 
-if __name__ == '__main__':
-    path_to_ct_scan =  '/cs/labs/josko/asherp7/example_cases/case11/BL/BL11.nii.gz'
-    path_to_liver_segmentation = '/cs/labs/josko/asherp7/example_cases/case11/BL/BL11_liverseg.nii.gz'
-    path_to_weights = '/mnt/local/aszeskin/asher/weights/weights-01-0.93.hdf5'
-    output_path = '/cs/labs/josko/asherp7/follow_up/outputs'
+def get_ct_and_liver_segmentation_filepaths(ct_dir_path, liver_seg_path, roi_suffix='_liverseg'):
+    file_names_list = []
+    for filename in os.listdir(ct_dir_path):
+        if filename.startswith('BL'):
+            extension = '.nii.gz'
+        else:
+            extension = '.nii'
+        roi_file_path = os.path.join(liver_seg_path, filename.replace('.nii.gz', roi_suffix+extension))
+        if not os.path.isfile(roi_file_path):
+            print(roi_file_path, 'is missing!')
+            continue
+        scan_file_path = os.path.join(ct_dir_path, filename)
+        file_names_list.append((scan_file_path, roi_file_path))
+    return file_names_list
 
-    # Uncomment to enable limitation of gpu memory.
-    # memory_fraction = 0.2
-    # limit_gpu_memory(memory_fraction)
+
+def predict_on_all_scans(ct_dir_path, liver_seg_path, model, path_to_weights, output_dir_path):
+    model.load_weights(path_to_weights)
+    file_list = get_ct_and_liver_segmentation_filepaths(ct_dir_path, liver_seg_path)
+    for idx, (ct_path, roi_path) in enumerate(file_list, 1):
+        print(idx, '/', len(file_list), 'predicting:', os.path.basename(ct_path))
+        predict_nifti(model, path_to_weights, ct_path, roi_path, output_dir_path)
+
+# if __name__ == '__main__':
+#     path_to_ct_scan =  '/cs/labs/josko/asherp7/example_cases/case11/BL/BL11.nii.gz'
+#     path_to_liver_segmentation = '/cs/labs/josko/asherp7/example_cases/case11/BL/BL11_liverseg.nii.gz'
+#     path_to_weights = '/mnt/local/aszeskin/asher/weights/weights-01-0.93.hdf5'
+#     output_path = '/cs/labs/josko/asherp7/follow_up/outputs'
+#
+#     # Uncomment to enable limitation of gpu memory.
+#     # memory_fraction = 0.2
+#     # limit_gpu_memory(memory_fraction)
+#     model = get_model()
+#     model.summary()
+#     predict_nifti(model, path_to_weights, path_to_ct_scan, path_to_liver_segmentation, output_path)
+
+
+if __name__ == '__main__':
+    ct_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL'
+    liver_seg_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL_liverSeg'
+    path_to_weights = '/mnt/local/aszeskin/asher/weights/weights-01-0.93.hdf5'
+    output_path = '/cs/labs/josko/asherp7/follow_up/outputs/all_predictions'
     model = get_model()
     model.summary()
-    predict_nifti(model, path_to_weights, path_to_ct_scan, path_to_liver_segmentation, output_path)
+    predict_on_all_scans(ct_dir_path, liver_seg_path, model, path_to_weights, output_path)
 
