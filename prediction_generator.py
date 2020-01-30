@@ -5,12 +5,11 @@ import keras
 
 class PredictionGenerator(keras.utils.Sequence):
     'Generates data for Keras'
-    def __init__(self, scan_filepath, organ_segmentation_filepath, batch_size=32, dim=(35, 35, 1),
+    def __init__(self, scan_filepath, organ_segmentation_filepath, batch_size=32, patch_dim=(35, 35, 1),
                  min_clip_value=-100, max_clip_value=150, sampling_step=1):
         'Initialization'
         self.batch_size = batch_size
-        self.dim = dim
-        self.patch_size = dim[0]
+        self.patch_dim = patch_dim
         self.min_clip_value = min_clip_value
         self.max_clip_value = max_clip_value
         self.sampling_step = sampling_step
@@ -46,7 +45,7 @@ class PredictionGenerator(keras.utils.Sequence):
     def __data_generation(self, list_IDs_temp):
         'Generates data containing batch_size samples' # X : (n_samples, *dim)
         # Initialization
-        X = np.empty((self.batch_size, *self.dim))
+        X = np.empty((self.batch_size, *self.patch_dim))
         indices = np.empty((self.batch_size, 3))
 
         # Generate data
@@ -63,7 +62,8 @@ class PredictionGenerator(keras.utils.Sequence):
         # Normalize:
         min_value = np.min(X)
         max_value = np.max(X)
-        X = (X - min_value) / (max_value - min_value)
+        if max_value - min_value > 0:
+            X = (X - min_value) / (max_value - min_value)
 
         # save indices:
         # Please notice that x,y,z in numpy array is not the same as nifti. for the generation of the
@@ -78,19 +78,17 @@ class PredictionGenerator(keras.utils.Sequence):
         for z in range(depth):
             for y in range(0, rows, self.sampling_step):
                 for x in range(0, columns, self.sampling_step):
-                    if x + self.patch_size < columns and y + self.patch_size < rows:  # discard border patches
-                        if self.is_patch_center_in_mask(x, y, z, self.organ_segmentation):
-                            patch = self.scan_data[y:y+self.patch_size, x:x+self.patch_size, z]
-                            # Adding to left corner indices: patch_dim // 2:
-                            # so we will get the middle of the patch instead of the left upper corner of the patch.
-                            y_center = y + self.dim[1] // 2
-                            x_center = x + self.dim[0] // 2
+                    if x + self.patch_dim[1] < columns and y + self.patch_dim[0] < rows:  # discard border patches
+                        # Adding to left corner indices: patch_dim // 2:
+                        # so we will get the middle of the patch instead of the left upper corner of the patch.
+                        y_center = y + self.patch_dim[1] // 2
+                        x_center = x + self.patch_dim[0] // 2
+                        if self.is_patch_center_in_mask(x_center, y_center, z, self.organ_segmentation):
+                            patch = self.scan_data[y:y+self.patch_dim[0], x:x+self.patch_dim[1], z]
                             patch_list.append((patch, (y_center, x_center, z)))
         return patch_list
 
-    def is_patch_center_in_mask(self, patch_x, patch_y, patch_z, roi_mask):
-        patch_center_x = patch_x + self.patch_size // 2
-        patch_center_y = patch_y + self.patch_size // 2
+    def is_patch_center_in_mask(self, patch_center_x, patch_center_y, patch_z, roi_mask):
         if roi_mask[patch_center_y, patch_center_x, patch_z] == 0:
             return False
         else:
