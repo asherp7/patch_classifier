@@ -47,9 +47,16 @@ def get_ct_liver_tumor_filepaths_list(ct_dir_path, roi_dir_path, tumor_dir_path,
     return file_names_list
 
 
-# def analyze_dataset(ct_dir_path, tumor_dir_path, prediction_dir_path, threshold, min_size):
-#     for
-#     remove_small_connected_componenets_3D(arr, min_size)
+def analyze_dataset(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_path, threshold, min_size):
+    file_paths = get_ct_liver_tumor_filepaths_list(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_path)
+    for idx, (ct_path, roi_path, tumor_path, pred_path) in enumerate(file_paths, 1):
+        annotation = nib.load(tumor_path).get_data()
+        probabilty_map = nib.load(pred_path).get_data()
+        prediction = (probabilty_map >= threshold)
+        remove_small_connected_componenets_3D(prediction, min_size)
+        prediction = (probabilty_map >= thresh)
+        case_name = os.path.basename(ct_path)
+        print(idx, '/', len(file_paths), case_name, ', threshold:', thresh, 'dice: ', segmentations_dice(prediction, annotation))
 
 
 if __name__ == '__main__':
@@ -61,3 +68,5 @@ if __name__ == '__main__':
     for thresh in np.linspace(0.7, 1, num=10):
         prediction = (probabilty_map >= thresh)
         print('threshold:', thresh, 'dice: ', segmentations_dice(prediction, annotation))
+
+        
