@@ -1,4 +1,4 @@
-from transform2h5 import Transform2h5
+from patch_generation.transform2h5 import Transform2h5
 import h5py
 import os
 

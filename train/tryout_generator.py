@@ -1,7 +1,5 @@
-from generator import DataGenerator
+from train.generator import DataGenerator
 import matplotlib.pyplot as plt
-import h5py
-
 
 train_h5_path = '/mnt/local/aszeskin/asher/liver_data/BL_patches.h5'
 validation_h5_path = '/mnt/local/aszeskin/asher/liver_data/FU_patches.h5'

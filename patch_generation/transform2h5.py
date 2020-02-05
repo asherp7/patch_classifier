@@ -172,7 +172,7 @@ class Transform2h5:
         self.hf.close()
 
     def save_all_patches_split_train_validation(self, validation_ratio=0.2):
-        print('creating training set:')
+        print('creating train set:')
         self.create_h5_datasets('train')
         file_paths = self.get_ct_liver_tumor_filepaths_list()
         num_validation_files = math.floor(len(file_paths) * validation_ratio)

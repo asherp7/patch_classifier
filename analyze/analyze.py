@@ -1,4 +1,4 @@
-from post_processing import remove_small_connected_componenets_3D
+from analyze.post_processing import remove_small_connected_componenets_3D
 import nibabel as nib
 import numpy as np
 import os

@@ -1,8 +1,8 @@
 import os
-from model import get_model
-from generator import DataGenerator
+from train.model import get_model
+from train.generator import DataGenerator
 from keras.callbacks import ModelCheckpoint
-from training_utils import limit_gpu_memory
+from train.training_utils import limit_gpu_memory
 
 
 

@@ -1,9 +1,7 @@
-from analyze import segmentations_dice
-import matplotlib.pyplot as plt
+from analyze.analyze import segmentations_dice
 import nibabel as nib
 import numpy as np
 from  scipy import ndimage
-import random
 import cv2
 import os
 

@@ -1,5 +1,5 @@
-from model import get_model
-from prediction_generator import PredictionGenerator
+from train.model import get_model
+from predict.prediction_generator import PredictionGenerator
 # from training_utils import limit_gpu_memory
 import nibabel as nib
 import numpy as np
@@ -9,7 +9,7 @@ import os
 def predict_nifti(model, path_to_weights, path_to_ct_scan, path_to_liver_segmentation, output_path):
     """
     Use model and weights to predict tumor probability map on ct nifti in the ROI given by the liver segmentation.
-    :param model: a Keras model used for predicting patches.
+    :param model: a Keras model used for predict patches.
     :param path_to_weights: path to weights that are loaded into model.
     :param path_to_ct_scan: Path to nifti CT scan.
     :param path_to_liver_segmentation: path to nifti file containing liver segmentation.
@@ -60,7 +60,7 @@ def predict_on_all_scans(ct_dir_path, liver_seg_path, model, path_to_weights, ou
     model.load_weights(path_to_weights)
     file_list = get_ct_and_liver_segmentation_filepaths(ct_dir_path, liver_seg_path)
     for idx, (ct_path, roi_path) in enumerate(file_list, 1):
-        print(idx, '/', len(file_list), 'predicting:', os.path.basename(ct_path))
+        print(idx, '/', len(file_list), 'predict:', os.path.basename(ct_path))
         predict_nifti(model, path_to_weights, ct_path, roi_path, output_dir_path)
 
 # if __name__ == '__main__':

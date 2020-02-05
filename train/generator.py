@@ -2,7 +2,7 @@ import numpy as np
 import keras
 import h5py
 
-from training_utils import augment_batch
+from train.training_utils import augment_batch
 
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
