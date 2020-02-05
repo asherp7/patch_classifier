@@ -42,5 +42,6 @@ seq = iaa.Sequential([
     )
 ], random_order=True) # apply augmenters in random order
 
+
 def augment_batch(X):
     return seq(images=X)

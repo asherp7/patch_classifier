@@ -1,16 +1,17 @@
+import skimage
+from skimage.util import montage
 from train.generator import DataGenerator
 import matplotlib.pyplot as plt
 
 train_h5_path = '/mnt/local/aszeskin/asher/liver_data/BL_patches.h5'
 validation_h5_path = '/mnt/local/aszeskin/asher/liver_data/FU_patches.h5'
-gen = DataGenerator(train_h5_path, 'patches', 'labels')
+gen = DataGenerator(train_h5_path, 'patches', 'labels', do_augmentations=True)
 a = gen[0]
-print(len(a))
-print(a[1])
 print(a[0][0].shape)
 print(a[0].dtype)
 print(a[0])
-plt.imshow(a[0][0].reshape((35,35)), cmap='gray')
+plt.imshow(montage(a[0].reshape([-1,35,35])), cmap='gray')
+# plt.imsave('patch_montage.png', montage(a[0].reshape([-1,35,35])))
 plt.show()
 
 

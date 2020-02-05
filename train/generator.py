@@ -65,6 +65,10 @@ class DataGenerator(keras.utils.Sequence):
 
         # do augmentations
         if self.do_augmentations:
+            # transform to uint8:
+            X += np.min(X)
+            X = X / np.max(X)
+            X = (255 * X).astype(np.uint8)
             X = augment_batch(X)
 
         # Normalize:
