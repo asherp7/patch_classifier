@@ -1,6 +1,7 @@
 from analyze.post_processing import remove_small_connected_componenets_3D
 import nibabel as nib
 import numpy as np
+import json
 import os
 
 def segmentations_dice(segmentation_1, segmentation_2):
@@ -57,6 +58,13 @@ def analyze_dataset(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_pa
         prediction = (probabilty_map >= thresh)
         case_name = os.path.basename(ct_path)
         print(idx, '/', len(file_paths), case_name, ', threshold:', thresh, 'dice: ', segmentations_dice(prediction, annotation))
+
+
+def get_data_split(output_dir_path):
+    data_split_filepath = os.path.join(output_dir_path, 'data_split.json')
+    with open(data_split_filepath, 'r') as fp:
+        data_split = json.load(fp)
+        return data_split
 
 
 if __name__ == '__main__':

@@ -3,6 +3,7 @@ import numpy as np
 import random
 import h5py
 import math
+import json
 import os
 
 
@@ -26,7 +27,7 @@ class Transform2h5:
         self.label_dataset_name = 'labels'
         self.tumor_indices_name = 'tumor_idx'
         self.patch_dict_name = 'patch_dict'
-        # self.non_tumor_indices_name = 'non_tumor_idx'
+        self.non_tumor_indices_name = 'non_tumor_idx'
         self.num_saved_patches = 0
 
     def read_nifti(self, nifti_filepath):
@@ -181,7 +182,7 @@ class Transform2h5:
         train_file_paths = [file_paths[i] for i in train_file_indices]
         validation_file_paths = [file_paths[i] for i in validation_file_indices]
         for idx, (scan_filepath, roi_filepath, tumor_filepath) in enumerate(train_file_paths):
-            print('(', idx+1, '/', len(file_paths), ')', 'processing', scan_filepath, '...')
+            print('(', idx+1, '/', len(train_file_paths), ')', 'processing', scan_filepath, '...')
             scan = self.read_nifti(scan_filepath)
             roi = self.read_nifti(roi_filepath)
             tumor = self.read_nifti(tumor_filepath)
@@ -193,7 +194,7 @@ class Transform2h5:
         print('creating validation set:')
         self.create_h5_datasets('validation')
         for idx, (scan_filepath, roi_filepath, tumor_filepath) in enumerate(validation_file_paths):
-            print('(', idx+1, '/', len(file_paths), ')', 'processing', scan_filepath, '...')
+            print('(', idx+1, '/', len(validation_file_paths), ')', 'processing', scan_filepath, '...')
             scan = self.read_nifti(scan_filepath)
             roi = self.read_nifti(roi_filepath)
             tumor = self.read_nifti(tumor_filepath)
@@ -202,6 +203,12 @@ class Transform2h5:
             self.standardize_orientation(tumor)
             self.save_single_nifti_patches(scan, roi, tumor)
         self.hf.close()
+
+        data_split = {"train": train_file_paths, "validation": validation_file_paths}
+        data_split_filepath = os.path.join(self.output_dir_path, 'data_split.json')
+        with open(data_split_filepath, 'w') as fp:
+            json.dump(data_split, fp, sort_keys=True, indent=4)
+        print('saved training - validation split to:', data_split_filepath)
 
 
 
