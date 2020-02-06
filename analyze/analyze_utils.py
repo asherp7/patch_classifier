@@ -1,4 +1,5 @@
-from analyze.post_processing_utils import remove_small_connected_componenets_3D
+from analyze.post_processing_utils import remove_small_connected_componenets_3D, \
+    save_mask_after_removing_small_connected_components, save_probability_map_as_thresholded_mask
 import nibabel as nib
 import numpy as np
 import json
@@ -48,16 +49,27 @@ def get_ct_liver_tumor_filepaths_list(ct_dir_path, roi_dir_path, tumor_dir_path,
     return file_names_list
 
 
-def analyze_dataset(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_path, threshold, min_size):
+def analyze_dataset(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_path, threshold, min_size, save_path=None):
+    dice_loss_dict = {}
     file_paths = get_ct_liver_tumor_filepaths_list(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_path)
     for idx, (ct_path, roi_path, tumor_path, pred_path) in enumerate(file_paths, 1):
+        filename = os.path.basename(ct_path)
         annotation = nib.load(tumor_path).get_data()
         probabilty_map = nib.load(pred_path).get_data()
         prediction = (probabilty_map >= threshold)
-        remove_small_connected_componenets_3D(prediction, min_size)
-        prediction = (probabilty_map >= thresh)
+        if save_path:
+            mask_output_filepath = os.path.join(save_path, 'threshold_'+filename)
+            save_probability_map_as_thresholded_mask(pred_path, mask_output_filepath, threshold)
+        filtered_prediction = remove_small_connected_componenets_3D(prediction, min_size)
+        if save_path:
+            filtered_output_file_path = os.path.join(save_path, 'filtered_'+filename)
+            save_mask_after_removing_small_connected_components(mask_output_filepath, filtered_output_file_path, min_size)
         case_name = os.path.basename(ct_path)
-        print(idx, '/', len(file_paths), case_name, ', threshold:', thresh, 'dice: ', segmentations_dice(prediction, annotation))
+        dice_loss = segmentations_dice(filtered_prediction, annotation)
+        dice_loss_dict[filename] = dice_loss
+        print(idx, '/', len(file_paths), case_name, ', threshold:', threshold, 'dice: ', dice_loss)
+    print('mean dice:', sum(dice_loss_dict.values()) / len(dice_loss_dict))
+    return dice_loss
 
 
 def get_data_split(output_dir_path):
