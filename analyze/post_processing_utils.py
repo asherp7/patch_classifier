@@ -1,9 +1,9 @@
-from analyze.analyze import segmentations_dice
+import matplotlib.pyplot as plt
 import nibabel as nib
 import numpy as np
-from  scipy import ndimage
+from scipy import ndimage
+import random
 import cv2
-import os
 
 
 def remove_small_connected_componenets_3D(arr, min_size):
@@ -13,7 +13,7 @@ def remove_small_connected_componenets_3D(arr, min_size):
     :param min_size: minimum size of pixels we want to keep
     :return: 3d array from which small connected components were removed
     """
-    structure = ndimage.morphology.generate_binary_structure(3, 3)
+    structure = ndimage.morphology.generate_binary_structure(arr.ndim, arr.ndim)
     labeled_array, num_components = ndimage.label(arr, structure)
     filtered_arr = np.zeros(arr.shape, arr.dtype)
     for label in range(num_components):
@@ -91,33 +91,34 @@ def save_data_as_new_nifti_file(old_filepath, new_data, new_filepath):
 #     threshold = 0.933
 #     save_probability_map_as_thresholded_mask(path_to_probability_map, mask_output_filepath, threshold)
 
-if __name__ == '__main__':
-    output_dir = '/cs/labs/josko/asherp7/follow_up/outputs/'
-    mask_filepath = os.path.join(output_dir, 'BL11_predicted_mask.nii.gz')
-    clean_mask_output_file_path = os.path.join(output_dir, 'BL11_predicted_clean_mask.nii.gz')
-    path_to_tumor_segmentation = '/cs/labs/josko/asherp7/example_cases/case11/BL/BL11_Tumors.nii.gz'
-    # for min_size in np.linspace(25, 500, num=10):
-    for min_size in [400]:
-        save_mask_after_removing_small_connected_components(mask_filepath, clean_mask_output_file_path, min_size)
-        annotation = nib.load(path_to_tumor_segmentation).get_data()
-        prediction = nib.load(clean_mask_output_file_path).get_data()
-        dice_score = segmentations_dice(prediction, annotation)
-        print('min component size:', min_size,  ', Dice score:', dice_score)
-
-
 # if __name__ == '__main__':
-#     height = 256
-#     width = 256
-#     img = np.zeros((height, width, 3), dtype=np.uint8)
-#     for i in range(10):
-#         color = (255, 255, 255)
-#         radius = random.randint(1, 30)
-#         center = (random.randint(0, width), random.randint(0,height))
-#         cv2.circle(img, center, radius, color, thickness=-1, lineType=8, shift=0)
-#     binary_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-#     plt.imshow(binary_img)
-#     plt.show()
-#     img2 = remove_small_connected_componenets_from_slice(binary_img, min_size=400)
-#     plt.imshow(img2)
-#     plt.show()
+#     output_dir = '/cs/labs/josko/asherp7/follow_up/outputs/'
+#     mask_filepath = os.path.join(output_dir, 'BL11_predicted_mask.nii.gz')
+#     clean_mask_output_file_path = os.path.join(output_dir, 'BL11_predicted_clean_mask.nii.gz')
+#     path_to_tumor_segmentation = '/cs/labs/josko/asherp7/example_cases/case11/BL/BL11_Tumors.nii.gz'
+#     # for min_size in np.linspace(25, 500, num=10):
+#     for min_size in [400]:
+#         save_mask_after_removing_small_connected_components(mask_filepath, clean_mask_output_file_path, min_size)
+#         annotation = nib.load(path_to_tumor_segmentation).get_data()
+#         prediction = nib.load(clean_mask_output_file_path).get_data()
+#         dice_score = segmentations_dice(prediction, annotation)
+#         print('min component size:', min_size,  ', Dice score:', dice_score)
+
+
+if __name__ == '__main__':
+    height = 256
+    width = 256
+    img = np.zeros((height, width, 3), dtype=np.uint8)
+    for i in range(10):
+        color = (255, 255, 255)
+        radius = random.randint(1, 30)
+        center = (random.randint(0, width), random.randint(0,height))
+        cv2.circle(img, center, radius, color, thickness=-1, lineType=8, shift=0)
+    binary_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    image_3d = np.stack((binary_img,binary_img))
+    plt.imshow(binary_img)
+    plt.show()
+    img2 = remove_small_connected_componenets_3D(image_3d, min_size=2000)
+    plt.imshow(img2[0])
+    plt.show()
 

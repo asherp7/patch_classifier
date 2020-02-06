@@ -39,14 +39,14 @@ def create_training_and_validation_from_BL():
     nifti_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL'
     roi_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL_liverSeg'
     tumor_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL_onlytumors'
-    output_path = '/mnt/local/aszeskin/asher/liver_data/sample_step_2_split_BL'
+    output_path = '/mnt/local/aszeskin/asher/liver_data/rotated_sample_step_3_split_BL'
     output_filename = 'patches.h5'
     roi_suffix = '_liverseg'
     tumor_suffix = '_Tumors'
     patch_size = 35
-    sampling_step = 2
+    sampling_step = 3
     transform = Transform2h5(nifti_dir_path, output_path,output_filename, ('L', 'P', 'S'), patch_size, sampling_step,
-                             roi_dir_path, roi_suffix, tumor_dir_path, tumor_suffix)
+                             roi_dir_path, roi_suffix, tumor_dir_path, tumor_suffix, added_rotations=3)
     transform.save_all_patches_split_train_validation()
     check_file(output_path, 'patches_train.h5')
     check_file(output_path, 'patches_validation.h5')

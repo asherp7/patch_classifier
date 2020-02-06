@@ -1,6 +1,7 @@
 import nibabel as nib
 import numpy as np
 import random
+import scipy.ndimage
 import h5py
 import math
 import json
@@ -9,7 +10,8 @@ import os
 
 class Transform2h5:
     def __init__(self, nifti_dir_path, output_dir_path, output_filename, orientation, patch_size, sampling_step,
-                 roi_path, roi_suffix, tumor_data_path, tumor_suffix, padding=None, augmetations=None, balance=True):
+                 roi_path, roi_suffix, tumor_data_path, tumor_suffix, padding=None, augmetations=None, balance=True,
+                 added_rotations=0):
         self.nifti_dir_path = nifti_dir_path
         self.output_dir_path = output_dir_path
         self.orientation = orientation
@@ -23,6 +25,7 @@ class Transform2h5:
         self.tumor_data_path = tumor_data_path
         self.tumor_suffix = tumor_suffix
         self.balance_patches = balance
+        self.added_rotations = added_rotations
         self.patches_datset_name = 'patches'
         self.label_dataset_name = 'labels'
         self.tumor_indices_name = 'tumor_idx'
@@ -132,20 +135,27 @@ class Transform2h5:
         non_tumor_patches_indices = []
         patch_labels = []
         patch_idx = 0
-        for z in range(depth):
-            for y in range(0, rows, self.sampling_step):
-                for x in range(0, columns, self.sampling_step):
-                    if x + self.patch_size < columns and y + self.patch_size < rows:  # discard border patches
-                        if self.is_patch_center_in_mask(x, y, z, organ_segmentation):
-                            if self.is_patch_center_in_mask(x, y, z, tumor_segmentation):
-                                patch_labels.append(1)  # center of patch belongs to tumor
-                                tumor_patches_indices.append(patch_idx)
-                            else:
-                                patch_labels.append(0)  # center of patch DOES NOT belong to tumor
-                                non_tumor_patches_indices.append(patch_idx)
-                            patch = arr[y:y+self.patch_size, x:x+self.patch_size, z]
-                            patch_list.append(patch)
-                            patch_idx += 1
+        for rotation in range(1 + self.added_rotations):
+            if rotation > 0:
+                angle = np.random.uniform(-45, 45)
+                rotated_arr = scipy.ndimage.rotate(arr, angle)
+            for z in range(depth):
+                for y in range(0, rows, self.sampling_step):
+                    for x in range(0, columns, self.sampling_step):
+                        if x + self.patch_size < columns and y + self.patch_size < rows:  # discard border patches
+                            if self.is_patch_center_in_mask(x, y, z, organ_segmentation):
+                                if self.is_patch_center_in_mask(x, y, z, tumor_segmentation):
+                                    patch_labels.append(1)  # center of patch belongs to tumor
+                                    tumor_patches_indices.append(patch_idx)
+                                else:
+                                    patch_labels.append(0)  # center of patch DOES NOT belong to tumor
+                                    non_tumor_patches_indices.append(patch_idx)
+                                if rotation == 0:
+                                    patch = arr[y:y+self.patch_size, x:x+self.patch_size, z]
+                                else:
+                                    patch = rotated_arr[y:y+self.patch_size, x:x+self.patch_size, z]
+                                patch_list.append(patch)
+                                patch_idx += 1
         return patch_list, patch_labels, tumor_patches_indices, non_tumor_patches_indices
 
     def create_h5_datasets(self, split=''):

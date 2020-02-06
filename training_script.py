@@ -5,10 +5,13 @@ if __name__ == '__main__':
     # validation_h5_path = '/mnt/local/aszeskin/asher/liver_data/FU_patches.h5'
     # train_h5_path = '/mnt/local/aszeskin/asher/liver_data/split_BL/patches_train.h5'
     # validation_h5_path = '/mnt/local/aszeskin/asher/liver_data/split_BL/patches_validation.h5'
-    train_h5_path = '/mnt/local/aszeskin/asher/liver_data/sample_step_2_split_BL/patches_train.h5'
-    validation_h5_path = '/mnt/local/aszeskin/asher/liver_data/sample_step_2_split_BL/patches_validation.h5'
+    # train_h5_path = '/mnt/local/aszeskin/asher/liver_data/sample_step_2_split_BL/patches_train.h5'
+    # validation_h5_path = '/mnt/local/aszeskin/asher/liver_data/sample_step_2_split_BL/patches_validation.h5'
+    train_h5_path = '/mnt/local/aszeskin/asher/liver_data/rotated_sample_step_3_split_BL/patches_train.h5'
+    validation_h5_path = '/mnt/local/aszeskin/asher/liver_data/rotated_sample_step_3_split_BL/patches_validation.h5'
+
     weights_save_path = '/mnt/local/aszeskin/asher/weights'
-    title = 'train_with_augmentations_sampling_step-2_batch-64'
+    title = 'train_with_rotations_sampling_step-2_batch-64_img_aug'
     batch_size = 64
     memory_fraction = 0.2
     do_augmentations = True
