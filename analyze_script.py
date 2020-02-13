@@ -5,7 +5,7 @@ import random
 import cv2
 
 
-
+# # save probability map as thresholded mask:
 # if __name__ == '__main__':
 #     output_dir = '/cs/labs/josko/asherp7/follow_up/outputs/'
 #     path_to_probability_map = os.path.join(output_dir, 'BL11.nii.gz')
@@ -14,15 +14,17 @@ import cv2
 #     save_probability_map_as_thresholded_mask(path_to_probability_map, mask_output_filepath, threshold)
 
 
+# compute dice scoer for all predictions after thresholding and removing small connected components:
 if __name__ == '__main__':
     ct_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL'
     roi_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL_liverSeg'
     prediction_dir_path = '/cs/labs/josko/asherp7/follow_up/outputs/all_predictions'
     tumor_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL_onlytumors'
     output_path = '/cs/labs/josko/asherp7/follow_up/outputs/processed_predictions'
-    min_size = 75
-    threshold = 0.933
-    dice_dict = analyze_dataset(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_path, threshold, min_size, output_path)
+    min_size = 80
+    # threshold = 0.933
+    dice_dict = analyze_dataset(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_path, min_size)
+    print(dice_dict)
 
 
 # # check dice coefficient of prediction:

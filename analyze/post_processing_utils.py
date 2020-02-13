@@ -1,8 +1,7 @@
-import matplotlib.pyplot as plt
+from skimage.filters import threshold_local, threshold_otsu
+from scipy import ndimage
 import nibabel as nib
 import numpy as np
-from scipy import ndimage
-import random
 import cv2
 
 
@@ -57,6 +56,20 @@ def remove_small_connected_components_from_all_slices(arr, min_size):
     return result_arr
 
 
+def adaptive_threshold_probability_map(probability_map, block_size = 35,  offset=10):
+    adaptive_thresh = threshold_local(probability_map, block_size, offset=offset)
+    return (probability_map >= adaptive_thresh).astype(probability_map.dtype)
+
+
+def apply_otsu_threshold_on_probability_map(probability_map):
+    # transform to uint8:
+    # uint8_probability_map = (255 * probability_map).astype(np.uint8)
+    # threshold, prediction = cv2.threshold(uint8_probability_map, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+    threshold = threshold_otsu(probability_map)
+    prediction = (probability_map >= threshold).astype(probability_map.dtype)
+    return threshold, prediction
+
+
 def threshold_probability_map(probability_map, threshold):
     return (probability_map >= threshold).astype(probability_map.dtype)
 
@@ -71,9 +84,12 @@ def save_mask_after_removing_small_connected_components(mask_filepath, output_fi
     save_data_as_new_nifti_file(mask_filepath, filtered_mask, output_file_path)
 
 
-def save_probability_map_as_thresholded_mask(path_to_probability_map, mask_output_filepath, threshold):
+def save_probability_map_as_thresholded_mask(path_to_probability_map, mask_output_filepath, threshold=None):
     probability_map = nib.load(path_to_probability_map)
-    mask = threshold_probability_map(probability_map.get_data(), threshold)
+    if threshold:
+        mask = threshold_probability_map(probability_map.get_data(), threshold)
+    else:
+        mask = apply_otsu_threshold_on_probability_map(probability_map.get_data())
     save_data_as_new_nifti_file(path_to_probability_map, mask, mask_output_filepath)
 
 
@@ -83,5 +99,7 @@ def save_data_as_new_nifti_file(old_filepath, new_data, new_filepath, verbose=Fa
     nib.save(new_file, new_filepath)
     if verbose:
         print('saved file to:', new_filepath)
+
+
 
 

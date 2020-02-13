@@ -1,5 +1,8 @@
 from analyze.post_processing_utils import remove_small_connected_componenets_3D, \
-    save_mask_after_removing_small_connected_components, save_probability_map_as_thresholded_mask
+    save_mask_after_removing_small_connected_components, save_probability_map_as_thresholded_mask,\
+    adaptive_threshold_probability_map, apply_otsu_threshold_on_probability_map, threshold_probability_map, \
+    save_data_as_new_nifti_file
+from scipy.ndimage import morphology
 import nibabel as nib
 import numpy as np
 import json
@@ -49,27 +52,43 @@ def get_ct_liver_tumor_filepaths_list(ct_dir_path, roi_dir_path, tumor_dir_path,
     return file_names_list
 
 
-def analyze_dataset(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_path, threshold, min_size, save_path=None):
+def analyze_dataset(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_path, min_size, threshold=None,
+                           save_path=None):
     dice_loss_dict = {}
+    if threshold:
+        apply_otsu = False
+    else:
+        apply_otsu = True
     file_paths = get_ct_liver_tumor_filepaths_list(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_path)
     for idx, (ct_path, roi_path, tumor_path, pred_path) in enumerate(file_paths, 1):
         filename = os.path.basename(ct_path)
         annotation = nib.load(tumor_path).get_data()
         probabilty_map = nib.load(pred_path).get_data()
-        prediction = (probabilty_map >= threshold)
-        if save_path:
-            mask_output_filepath = os.path.join(save_path, 'threshold_'+filename)
-            save_probability_map_as_thresholded_mask(pred_path, mask_output_filepath, threshold)
+        if apply_otsu:
+            threshold, prediction = apply_otsu_threshold_on_probability_map(probabilty_map)
+        else:
+            prediction = threshold_probability_map(probabilty_map, threshold)
         filtered_prediction = remove_small_connected_componenets_3D(prediction, min_size)
-        if save_path:
-            filtered_output_file_path = os.path.join(save_path, 'filtered_'+filename)
-            save_mask_after_removing_small_connected_components(mask_output_filepath, filtered_output_file_path, min_size)
+        fill_holes = morphology.binary_fill_holes(filtered_prediction, np.ones((3, 3, 3)))
         case_name = os.path.basename(ct_path)
-        dice_loss = segmentations_dice(filtered_prediction, annotation)
-        dice_loss_dict[filename] = dice_loss
-        print(idx, '/', len(file_paths), case_name, ', threshold:', threshold, 'dice: ', dice_loss)
-    print('mean dice:', sum(dice_loss_dict.values()) / len(dice_loss_dict))
-    return dice_loss
+        threshold_dice_loss = segmentations_dice(prediction, annotation)
+        filtered_dice_loss = segmentations_dice(filtered_prediction, annotation)
+        fill_holes_dice_loss = segmentations_dice(fill_holes, annotation)
+        dice_loss_dict[filename] = {"threshold": threshold_dice_loss,
+                                    "filtered": filtered_dice_loss,
+                                    "fill": fill_holes_dice_loss}
+        print(idx, '/', len(file_paths), case_name, ', threshold:', round(threshold, 2), ', threshold dice: ',
+              round(threshold_dice_loss, 2), ", filtered dice loss", round(filtered_dice_loss, 2),
+              ', fill holes dice:', round(fill_holes_dice_loss, 2))
+        if save_path:
+            filtered_output_file_path = os.path.join(save_path, 'filtered_'+case_name)
+            mask_output_filepath = os.path.join(save_path, 'threshold_'+case_name)
+            save_data_as_new_nifti_file(pred_path, filtered_prediction, filtered_output_file_path)
+            save_data_as_new_nifti_file(pred_path, prediction, mask_output_filepath)
+    print('threshold mean dice:', round(sum([x["threshold"] for x in dice_loss_dict.values()]) / len(dice_loss_dict), 3))
+    print('filtered mean dice:', round(sum([x["filtered"] for x in dice_loss_dict.values()]) / len(dice_loss_dict), 3))
+    print('fill holes mean dice:', round(sum([x["fill"] for x in dice_loss_dict.values()]) / len(dice_loss_dict), 3))
+    return dice_loss_dict
 
 
 def get_data_split(output_dir_path):
@@ -77,6 +96,7 @@ def get_data_split(output_dir_path):
     with open(data_split_filepath, 'r') as fp:
         data_split = json.load(fp)
         return data_split
+
 
 
         
