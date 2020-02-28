@@ -8,16 +8,29 @@ import numpy as np
 import json
 import os
 
-def segmentations_dice(segmentation_1, segmentation_2):
-    n1 = np.count_nonzero(segmentation_1)
-    n2 = np.count_nonzero(segmentation_2)
-    intersection = np.logical_and(segmentation_1, segmentation_2)
-    n_intersection = np.count_nonzero(intersection)
-    # print('n1:', n1)
-    # print('n2:', n2)
-    # print('n_intersection:', n_intersection)
-    dice = 2*n_intersection / (n1 + n2)
-    return dice
+# def segmentations_dice(segmentation_1, segmentation_2):
+#     n1 = np.count_nonzero(segmentation_1)
+#     n2 = np.count_nonzero(segmentation_2)
+#     intersection = np.logical_and(segmentation_1, segmentation_2)
+#     n_intersection = np.count_nonzero(intersection)
+#     dice = 2*n_intersection / (n1 + n2)
+#     return dice
+
+
+def segmentations_dice(gt_seg, estimated_seg):
+    """
+    compute dice coefficient
+    :param gt_seg:
+    :param estimated_seg:
+    :return:
+    """
+    seg1 = np.asarray(gt_seg).astype(np.bool)
+    seg2 = np.asarray(estimated_seg).astype(np.bool)
+
+    # Compute Dice coefficient
+    intersection = np.logical_and(seg1, seg2)
+
+    return 2. * intersection.sum() / (seg1.sum() + seg2.sum())
 
 
 def segmentations_assd(segmentation_1, segmentation_2):
@@ -31,15 +44,16 @@ def segmentations_voe(segmentation_1, segmentation_2):
 
 
 def get_ct_liver_tumor_filepaths_list(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_path,
-                                      tumor_suffix='_Tumors', roi_suffix='_liverseg'):
+                                      tumor_suffix='_newTumors_copy', roi_suffix='_LiverSeg'):
     file_names_list = []
     for filename in os.listdir(ct_dir_path):
-        tumor_file_path = os.path.join(tumor_dir_path, filename.replace('.nii.gz', tumor_suffix+'.nii.gz'))
+        tumor_file_path = os.path.join(tumor_dir_path, filename.replace('.nii', tumor_suffix+'.nii'))
         if filename.startswith('BL'):
-            extension = '.nii.gz'
+            extension = '.nii'
         else:
             extension = '.nii'
-        roi_file_path = os.path.join(roi_dir_path, filename.replace('.nii.gz', roi_suffix+extension))
+        # roi_file_path = os.path.join(roi_dir_path, filename.replace('.nii.gz', roi_suffix+extension))
+        roi_file_path = os.path.join(roi_dir_path, filename.replace('.nii', roi_suffix+extension))
         if not os.path.isfile(roi_file_path):
             print(roi_file_path, 'is missing!')
             continue
@@ -47,19 +61,36 @@ def get_ct_liver_tumor_filepaths_list(ct_dir_path, roi_dir_path, tumor_dir_path,
             print(tumor_file_path, 'is missing!')
             continue
         scan_file_path = os.path.join(ct_dir_path, filename)
-        prediction_file_path = os.path.join(prediction_dir_path, filename)
+        prediction_file_path = os.path.join(prediction_dir_path, filename).replace('.nii', '_chanvese_seg_expand.nii')
         file_names_list.append((scan_file_path, roi_file_path, tumor_file_path, prediction_file_path))
     return file_names_list
 
 
-def analyze_dataset(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_path, min_size, threshold=None,
-                           save_path=None):
+def analyze_dataset(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_path):
+    dice_loss_dict = {}
+    file_paths = get_ct_liver_tumor_filepaths_list(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_path)
+    for idx, (ct_path, roi_path, tumor_path, pred_path) in enumerate(file_paths, 1):
+        filename = os.path.basename(ct_path)
+        gt = nib.load(tumor_path).get_data()
+        prediction = nib.load(pred_path).get_data()
+        dice_loss_dict[filename] = segmentations_dice(gt, prediction)
+        print(idx, '/', len(file_paths), filename, ', dice:', dice_loss_dict[filename])
+    return dice_loss_dict
+
+
+def analyze_dataset_after_threshold_and_filter_small_components(ct_dir_path,
+                                                                 roi_dir_path,
+                                                                 tumor_dir_path,
+                                                                 prediction_dir_path,
+                                                                 min_size,
+                                                                 threshold=None,
+                                                                 save_path=None):
     dice_loss_dict = {}
     if threshold:
         apply_otsu = False
     else:
         apply_otsu = True
-    file_paths = get_ct_liver_tumor_filepaths_list(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_path)
+    file_paths = get_ct_liver_tumor_filepaths_list(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_path, roi_suffix='_liverseg')
     for idx, (ct_path, roi_path, tumor_path, pred_path) in enumerate(file_paths, 1):
         filename = os.path.basename(ct_path)
         annotation = nib.load(tumor_path).get_data()

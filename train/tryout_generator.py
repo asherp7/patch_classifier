@@ -14,14 +14,3 @@ plt.imshow(montage(a[0].reshape([-1,35,35])), cmap='gray')
 # plt.imsave('patch_montage.png', montage(a[0].reshape([-1,35,35])))
 plt.show()
 
-
-
-# import h5py
-# data_path = '/mnt/local/aszeskin/asher/transforfm_h5_output'
-# f = h5py.File('/mnt/local/aszeskin/asher/transforfm_h5_output/patches.h5', 'r')
-# print(f.keys())
-# print(f['patches'])
-# print(f['labels'])
-# print(f['tumor_idx'])
-# print(f['non_tumor_idx'])
-# n_patches = f['patches'].shape[0]

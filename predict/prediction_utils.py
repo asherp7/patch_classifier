@@ -1,4 +1,4 @@
-from train.model import get_model
+from train.patch_model import get_model
 from predict.prediction_generator import PredictionGenerator
 # from training_utils import limit_gpu_memory
 import nibabel as nib
@@ -25,6 +25,8 @@ def predict_nifti(model, path_to_weights, path_to_ct_scan, path_to_liver_segment
     # create tumor probability map:
     ct_scan = nib.load(path_to_ct_scan)
     prediction_probability_map = construct_3d_arry(predictions[:, 1], index_array, ct_scan.get_fdata().shape)
+    # transfer to 0-1000 range
+    prediction_probability_map = (1000 * prediction_probability_map).astype(np.uint16)
     output_filepath = os.path.join(output_path, scan_name)
     new_img = nib.Nifti1Image(prediction_probability_map, ct_scan.affine)
     # save tumor probability map:
@@ -43,10 +45,10 @@ def construct_3d_arry(predictions, indices, arr_shape):
 def get_ct_and_liver_segmentation_filepaths(ct_dir_path, liver_seg_path, roi_suffix='_liverseg'):
     file_names_list = []
     for filename in os.listdir(ct_dir_path):
-        if filename.startswith('BL'):
-            extension = '.nii.gz'
-        else:
+        if filename.startswith('FU'):
             extension = '.nii'
+        else:
+            extension = '.nii.gz'
         roi_file_path = os.path.join(liver_seg_path, filename.replace('.nii.gz', roi_suffix+extension))
         if not os.path.isfile(roi_file_path):
             print(roi_file_path, 'is missing!')

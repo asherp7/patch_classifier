@@ -6,7 +6,7 @@ from train.training_utils import augment_batch, custom_augment_img
 
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
-    def __init__(self, h5_filepath, data_name, labels_name, do_augmentations, batch_size=32, dim=(35, 35, 1),
+    def __init__(self, h5_filepath, data_name, labels_name, do_augmentations, batch_size, dim,
                  n_classes=2, shuffle=True, min_clip_value=-100, max_clip_value=150):
         'Initialization'
         self.hf = h5py.File(h5_filepath, 'r')
@@ -50,16 +50,15 @@ class DataGenerator(keras.utils.Sequence):
         'Generates data containing batch_size samples' # X : (n_samples, *dim)
         # Initialization
         X = np.empty((self.batch_size, *self.dim))
-        y = np.empty((self.batch_size), dtype=int)
+        Y = np.empty((self.batch_size, *self.dim))
 
         # Generate data
         for i, ID in enumerate(list_IDs_temp):
             # Store sample
-            patch = self.hf[self.data_name][ID]
-            X[i,] = np.expand_dims(patch, axis=-1)
+            X[i,] = np.expand_dims(self.hf[self.data_name][ID], axis=-1)
 
-            # Store class
-            y[i] = self.hf[self.labels_name][ID]
+            # Store segmentation mask
+            Y[i] = np.expand_dims(self.hf[self.labels_name][ID], axis=-1)
 
         # Clip values:
         np.clip(X, self.min_clip_value, self.max_clip_value, out=X)
@@ -83,6 +82,6 @@ class DataGenerator(keras.utils.Sequence):
         else:
             np.clip(X, 0, 1, out=X)
 
-        return X, keras.utils.to_categorical(y, num_classes=self.n_classes)
+        return X, Y
 
 

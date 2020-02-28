@@ -14,17 +14,36 @@ import cv2
 #     save_probability_map_as_thresholded_mask(path_to_probability_map, mask_output_filepath, threshold)
 
 
-# compute dice scoer for all predictions after thresholding and removing small connected components:
+# compute dice score for all predictions after applying Chan Vesse algorithm:
 if __name__ == '__main__':
-    ct_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL'
-    roi_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL_liverSeg'
-    prediction_dir_path = '/cs/labs/josko/asherp7/follow_up/outputs/all_predictions'
-    tumor_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL_onlytumors'
+    # ct_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL'
+    ct_dir_path = '/cs/labs/josko/asherp7/follow_up/Chanvese/allFU'
+    # roi_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL_liverSeg'
+    roi_dir_path = '/cs/labs/josko/asherp7/follow_up/Chanvese/allFU_liverSegFixed'
+    # prediction_dir_path = '/cs/labs/josko/asherp7/follow_up/outputs/all_predictions'
+    prediction_dir_path = '/cs/labs/josko/asherp7/follow_up/Chanvese/allFU_segmentation_CNN_and_CV'
+    # tumor_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL_onlytumors'
+    tumor_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allFU_newAndOldTumors'
     output_path = '/cs/labs/josko/asherp7/follow_up/outputs/processed_predictions'
-    min_size = 80
-    # threshold = 0.933
-    dice_dict = analyze_dataset(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_path, min_size)
-    print(dice_dict)
+    dice_dict = analyze_dataset(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_path)
+    print('mean dice:', round(sum([x for x in dice_dict.values()]) / len(dice_dict), 3))
+
+
+# # compute dice score for all predictions after thresholding and removing small connected components:
+# if __name__ == '__main__':
+#     ct_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL'
+#     roi_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL_liverSeg'
+#     prediction_dir_path = '/cs/labs/josko/asherp7/follow_up/outputs/all_predictions'
+#     tumor_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL_onlytumors'
+#     output_path = '/cs/labs/josko/asherp7/follow_up/outputs/processed_predictions'
+#     min_size = 80
+#     # threshold = 0.933
+#     dice_dict = analyze_dataset_after_threshold_and_filter_small_components(ct_dir_path,
+#                                                                             roi_dir_path,
+#                                                                             tumor_dir_path,
+#                                                                             prediction_dir_path,
+#                                                                             min_size)
+#     print(dice_dict)
 
 
 # # check dice coefficient of prediction:
