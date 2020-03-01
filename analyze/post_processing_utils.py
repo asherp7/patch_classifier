@@ -1,11 +1,8 @@
-from analyze import segmentations_dice
-import matplotlib.pyplot as plt
+from skimage.filters import threshold_local, threshold_otsu
+from scipy import ndimage
 import nibabel as nib
 import numpy as np
-from  scipy import ndimage
-import random
 import cv2
-import os
 
 
 def remove_small_connected_componenets_3D(arr, min_size):
@@ -15,7 +12,7 @@ def remove_small_connected_componenets_3D(arr, min_size):
     :param min_size: minimum size of pixels we want to keep
     :return: 3d array from which small connected components were removed
     """
-    structure = ndimage.morphology.generate_binary_structure(3, 3)
+    structure = ndimage.morphology.generate_binary_structure(arr.ndim, arr.ndim)
     labeled_array, num_components = ndimage.label(arr, structure)
     filtered_arr = np.zeros(arr.shape, arr.dtype)
     for label in range(num_components):
@@ -59,6 +56,20 @@ def remove_small_connected_components_from_all_slices(arr, min_size):
     return result_arr
 
 
+def adaptive_threshold_probability_map(probability_map, block_size = 35,  offset=10):
+    adaptive_thresh = threshold_local(probability_map, block_size, offset=offset)
+    return (probability_map >= adaptive_thresh).astype(probability_map.dtype)
+
+
+def apply_otsu_threshold_on_probability_map(probability_map):
+    # transform to uint8:
+    # uint8_probability_map = (255 * probability_map).astype(np.uint8)
+    # threshold, prediction = cv2.threshold(uint8_probability_map, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+    threshold = threshold_otsu(probability_map)
+    prediction = (probability_map >= threshold).astype(probability_map.dtype)
+    return threshold, prediction
+
+
 def threshold_probability_map(probability_map, threshold):
     return (probability_map >= threshold).astype(probability_map.dtype)
 
@@ -73,53 +84,22 @@ def save_mask_after_removing_small_connected_components(mask_filepath, output_fi
     save_data_as_new_nifti_file(mask_filepath, filtered_mask, output_file_path)
 
 
-def save_probability_map_as_thresholded_mask(path_to_probability_map, mask_output_filepath, threshold):
+def save_probability_map_as_thresholded_mask(path_to_probability_map, mask_output_filepath, threshold=None):
     probability_map = nib.load(path_to_probability_map)
-    mask = threshold_probability_map(probability_map.get_data(), threshold)
+    if threshold:
+        mask = threshold_probability_map(probability_map.get_data(), threshold)
+    else:
+        mask = apply_otsu_threshold_on_probability_map(probability_map.get_data())
     save_data_as_new_nifti_file(path_to_probability_map, mask, mask_output_filepath)
 
 
-def save_data_as_new_nifti_file(old_filepath, new_data, new_filepath):
+def save_data_as_new_nifti_file(old_filepath, new_data, new_filepath, verbose=False):
     old_file = nib.load(old_filepath)
     new_file = nib.Nifti1Image(new_data, old_file.affine)
     nib.save(new_file, new_filepath)
-    print('saved file to:', new_filepath)
+    if verbose:
+        print('saved file to:', new_filepath)
 
 
-# if __name__ == '__main__':
-#     output_dir = '/cs/labs/josko/asherp7/follow_up/outputs/'
-#     path_to_probability_map = os.path.join(output_dir, 'BL11.nii.gz')
-#     mask_output_filepath = os.path.join(output_dir, 'BL11_predicted_mask.nii.gz')
-#     threshold = 0.933
-#     save_probability_map_as_thresholded_mask(path_to_probability_map, mask_output_filepath, threshold)
 
-if __name__ == '__main__':
-    output_dir = '/cs/labs/josko/asherp7/follow_up/outputs/'
-    mask_filepath = os.path.join(output_dir, 'BL11_predicted_mask.nii.gz')
-    clean_mask_output_file_path = os.path.join(output_dir, 'BL11_predicted_clean_mask.nii.gz')
-    path_to_tumor_segmentation = '/cs/labs/josko/asherp7/example_cases/case11/BL/BL11_Tumors.nii.gz'
-    # for min_size in np.linspace(25, 500, num=10):
-    for min_size in [400]:
-        save_mask_after_removing_small_connected_components(mask_filepath, clean_mask_output_file_path, min_size)
-        annotation = nib.load(path_to_tumor_segmentation).get_data()
-        prediction = nib.load(clean_mask_output_file_path).get_data()
-        dice_score = segmentations_dice(prediction, annotation)
-        print('min component size:', min_size,  ', Dice score:', dice_score)
-
-
-# if __name__ == '__main__':
-#     height = 256
-#     width = 256
-#     img = np.zeros((height, width, 3), dtype=np.uint8)
-#     for i in range(10):
-#         color = (255, 255, 255)
-#         radius = random.randint(1, 30)
-#         center = (random.randint(0, width), random.randint(0,height))
-#         cv2.circle(img, center, radius, color, thickness=-1, lineType=8, shift=0)
-#     binary_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-#     plt.imshow(binary_img)
-#     plt.show()
-#     img2 = remove_small_connected_componenets_from_slice(binary_img, min_size=400)
-#     plt.imshow(img2)
-#     plt.show()
 

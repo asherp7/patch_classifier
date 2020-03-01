@@ -1,6 +1,5 @@
 import os
 import argparse
-import dicom2nifti
 
 
 def convert_dicom_directory(dicom_directory, output_folder):
