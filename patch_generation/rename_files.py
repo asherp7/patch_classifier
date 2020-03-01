@@ -104,5 +104,5 @@ if __name__ == '__main__':
     rafi_data = '/cs/labs/josko/public/for_aviv/TrainingSet/Rafi_folder'
     cropped_data = '/cs/labs/josko/public/for_aviv/TrainingSet'
 
-    # combine_Rafi_data(rafi_data, ct_dir, liver_seg_dir, tumor_dir)
+    combine_Rafi_data(rafi_data, ct_dir, liver_seg_dir, tumor_dir)
     combine_Richard_data(cropped_data, ct_dir, liver_seg_dir, tumor_dir)
