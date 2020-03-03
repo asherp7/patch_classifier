@@ -79,3 +79,6 @@ fabric.properties
 
 # iml files:
 *.iml
+
+# numpy files:
+*.npy
