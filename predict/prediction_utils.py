@@ -6,17 +6,15 @@ import numpy as np
 import os
 
 
-def predict_nifti(model, path_to_weights, path_to_ct_scan, path_to_liver_segmentation, output_path):
+def predict_nifti(model, path_to_ct_scan, path_to_liver_segmentation, output_path):
     """
     Use model and weights to predict tumor probability map on ct nifti in the ROI given by the liver segmentation.
     :param model: a Keras model used for predict patches.
-    :param path_to_weights: path to weights that are loaded into model.
     :param path_to_ct_scan: Path to nifti CT scan.
     :param path_to_liver_segmentation: path to nifti file containing liver segmentation.
     :param output_path: path into which to save the output probability map
     :param save_array: flag to save the array for debug mode.
     """
-    model.load_weights(path_to_weights)
     scan_name = os.path.basename(path_to_ct_scan)
     # Use model for prediction:
     prediction_generator = PredictionGenerator(path_to_ct_scan, path_to_liver_segmentation)
@@ -63,7 +61,7 @@ def predict_on_all_scans(ct_dir_path, liver_seg_path, model, path_to_weights, ou
     file_list = get_ct_and_liver_segmentation_filepaths(ct_dir_path, liver_seg_path)
     for idx, (ct_path, roi_path) in enumerate(file_list, 1):
         print(idx, '/', len(file_list), 'predict:', os.path.basename(ct_path))
-        predict_nifti(model, path_to_weights, ct_path, roi_path, output_dir_path)
+        predict_nifti(model, ct_path, roi_path, output_dir_path)
 
 
 

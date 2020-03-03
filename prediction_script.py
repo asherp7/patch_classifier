@@ -1,4 +1,6 @@
+from train.training_utils import limit_gpu_memory
 from predict.prediction_utils import *
+from datetime import datetime
 
 # if __name__ == '__main__':
 #     path_to_ct_scan =  '/cs/labs/josko/asherp7/example_cases/case11/BL/BL11.nii.gz'
@@ -14,19 +16,31 @@ from predict.prediction_utils import *
 #     predict_nifti(model, path_to_weights, path_to_ct_scan, path_to_liver_segmentation, output_path)
 
 
+def create_preditcions_save_dir(save_path, title):
+    now = datetime.now() # current date and time
+    date_time = now.strftime("_%Y-%m-%d_%H-%M-%S")
+    prediction_path = os.path.join(save_path, title+date_time)
+    os.mkdir(prediction_path)
+    return prediction_path
+
+
 if __name__ == '__main__':
+    memory_fraction = 0.2
     # ct_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL'
     # liver_seg_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL_liverSeg'
     # ct_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allFU'
     # liver_seg_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allFU_liverSegFixed'
-    # ct_dir_path = '/cs/labs/josko/asherp7/follow_up/combined_data/ct_scans'
-    ct_dir_path = '/cs/labs/josko/asherp7/follow_up/combined_data/ct_FU'
+    ct_dir_path = '/cs/labs/josko/asherp7/follow_up/combined_data/ct_scans'
+    # ct_dir_path = '/cs/labs/josko/asherp7/follow_up/combined_data/ct_FU'
     liver_seg_path = '/cs/labs/josko/asherp7/follow_up/combined_data/liver_seg'
     # path_to_weights = '/mnt/local/aszeskin/asher/weights/weights-01-0.93.hdf5'
     # path_to_weights = '/cs/labs/josko/asherp7/follow_up/weights-01-0.93.hdf5'
     # path_to_weights = '/mnt/local/aszeskin/asher/weights/unet_train_all_BL_2020-02-20_13-56-49/weights-05-0.96.hdf5'
-    path_to_weights = '/mnt/local/aszeskin/asher/weights/unet_train_all_BL_2020-02-27_15-01-39/weights-01-0.91.hdf5'
-    output_path = '/cs/labs/josko/asherp7/follow_up/outputs/new_predictions'
+    # path_to_weights = '/mnt/local/aszeskin/asher/weights/unet_train_all_BL_2020-02-27_15-01-39/weights-01-0.91.hdf5'
+    path_to_weights = '/mnt/local/aszeskin/asher/weights/combined_data_fixed_liver_seg_2020-03-03_14-12-47/weights-01-0.92.hdf5'
+    save_path = '/cs/labs/josko/asherp7/follow_up/outputs/'
+    output_path = create_preditcions_save_dir(save_path, 'cnn_predictions')
+    limit_gpu_memory(memory_fraction)
     model = get_model()
     model.summary()
     model.load_weights(path_to_weights)
