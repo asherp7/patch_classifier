@@ -240,8 +240,6 @@ def remove_small_components_and_save(old_dirpath, new_dirpath, cc_min_size=10):
         save_data_as_new_nifti_file(old_filepath, clean_mask, new_filepath)
 
 
-
-
 # if __name__ == '__main__':
 #     # X, y = make_multilabel_classification(n_samples=1000, n_features=4)
 #     # print(X.shape)
@@ -306,17 +304,16 @@ if __name__ == '__main__':
 
 
     filenames = get_filenames(ct_dir_path, tumor_dir_path, cnn_pred_dir_path, chan_vase_remove_small_cc_dir_path)
-    # for ct, tumor, cnn, chan in filenames:
-    #     for filename in [ct, tumor, cnn, chan]:
-    #         print(filename)
-    #         assert os.path.isfile(filename)
 
-
+    # create gt and features:
     # features, gt = create_random_forest_features_and_gt(filenames)
     # np.save('features', features)
     # np.save('gt', gt)
+
+    # load gt and features:
     gt = np.load('gt.npy')
     features = np.load('features.npy')
+
     num_estimatores = 30
     classifier = train_random_forest(num_estimatores, features, gt)
     apply_selection_on_dir(classifier, filenames, selection_output_folder)
