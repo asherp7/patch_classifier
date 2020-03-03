@@ -97,10 +97,10 @@ def combine_Richard_data(cropped_data, ct_dir, liver_seg_dir, tumor_dir):
 
 
 if __name__ == '__main__':
-    data_root = '/cs/labs/josko/asherp7/follow_up/combined_data'
-    ct_dir = os.path.join(data_root, 'ct_scans')
-    liver_seg_dir = os.path.join(data_root, 'liver_seg')
-    tumor_dir = os.path.join(data_root, 'tumors')
+    combined_data_root = '/cs/labs/josko/asherp7/follow_up/combined_data'
+    ct_dir = os.path.join(combined_data_root, 'ct_scans')
+    liver_seg_dir = os.path.join(combined_data_root, 'liver_seg')
+    tumor_dir = os.path.join(combined_data_root, 'tumors')
     rafi_data = '/cs/labs/josko/public/for_aviv/TrainingSet/Rafi_folder'
     cropped_data = '/cs/labs/josko/public/for_aviv/TrainingSet'
 

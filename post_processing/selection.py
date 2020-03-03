@@ -14,7 +14,11 @@ import numpy as np
 
 
 def bbox_3D(arr):
+    """
 
+    :param arr:
+    :return:
+    """
     r = np.any(arr, axis=(1, 2))
     c = np.any(arr, axis=(0, 2))
     z = np.any(arr, axis=(0, 1))
@@ -24,10 +28,6 @@ def bbox_3D(arr):
     zmin, zmax = np.where(z)[0][[0, -1]]
 
     return rmin, rmax, cmin, cmax, zmin, zmax
-
-
-def save_all_scan_features():
-    pass
 
 
 def get_scan_connected_componenets_features_and_gt(ct_data,

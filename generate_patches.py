@@ -88,20 +88,23 @@ def create_unet_validation_set():
     check_file(output_path, output_filename, check_mask_patches=True)
 
 
-def create_training_set_combined_data():
-    nifti_dir_path = '/cs/labs/josko/asherp7/combined_data/ct_scans'
-    roi_dir_path = '/cs/labs/josko/asherp7/combined_data/liver_seg'
-    tumor_dir_path = '/cs/labs/josko/asherp7/combined_data/tumors'
+def create_training_set_and_validation_set_combined_data():
+    data_root = '/cs/labs/josko/asherp7/follow_up/combined_data'
+    nifti_dir_path = os.path.join(data_root, 'ct_scans')
+    roi_dir_path = os.path.join(data_root, 'liver_seg')
+    tumor_dir_path = os.path.join(data_root, 'tumors')
     output_path = '/mnt/local/aszeskin/asher/liver_data'
     output_filename = 'combined_patches_step_2.h5'
     roi_suffix = '_liverseg'
     tumor_suffix = '_Tumors'
     patch_size = 35
     sampling_step = 2
+    validation_ratio = 0.1
     transform = Transform2h5(nifti_dir_path, output_path,output_filename, ('L', 'P', 'S'), patch_size, sampling_step,
                              roi_dir_path, roi_suffix, tumor_dir_path, tumor_suffix)
-    transform.save_all_nifti_patches()
-    check_file(output_path, output_filename)
+    transform.save_all_patches_split_train_validation(validation_ratio)
+    check_file(output_path, 'combined_patches_step_2_train.h5')
+    check_file(output_path, 'combined_patches_step_2_validation.h5')
 
 
 def check_file(output_path, file_name, check_mask_patches=False):
@@ -126,4 +129,4 @@ if __name__ == '__main__':
     # create_unet_training_set()
     # create_unet_validation_set()
 
-    create_training_set_combined_data()
+    create_training_set_and_validation_set_combined_data()
