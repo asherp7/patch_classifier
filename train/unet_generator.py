@@ -63,24 +63,17 @@ class DataGenerator(keras.utils.Sequence):
         # Clip values:
         np.clip(X, self.min_clip_value, self.max_clip_value, out=X)
 
+        # Normalize:
+        X = (X - self.min_clip_value) / (self.max_clip_value - self.min_clip_value)
+
         # do augmentations
         if self.do_augmentations:
-            # transform to uin8:
-            min_value = np.min(X)
-            max_value = np.max(X)
-            if max_value - min_value > 0:
-                X = ((X - min_value) * 255 / (max_value - min_value)).astype(np.uint8)
-            else:
-                np.clip(X, 0, 255, out=X)
+            # transform to uint8:
+            X = (X * 255).astype(np.uint8)
+            # augment batch:
             X = augment_batch(X)
-
-        # Normalize:
-        min_value = np.min(X)
-        max_value = np.max(X)
-        if max_value - min_value > 0:
-            X = (X - min_value) / (max_value - min_value)
-        else:
-            np.clip(X, 0, 1, out=X)
+            # transform back to (0,1) interval:
+            X = (X / 255.0).astype(np.float32)
 
         return X, Y
 

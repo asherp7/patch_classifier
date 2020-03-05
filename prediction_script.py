@@ -43,7 +43,6 @@ if __name__ == '__main__':
     limit_gpu_memory(memory_fraction)
     model = get_model()
     model.summary()
-    model.load_weights(path_to_weights)
     predict_on_all_scans(ct_dir_path, liver_seg_path, model, path_to_weights, output_path)
 
 

@@ -14,7 +14,7 @@ if __name__ == '__main__':
     train_h5_path = '/mnt/local/aszeskin/asher/liver_data/combined_patches_step_2_train.h5'
     validation_h5_path  = '/mnt/local/aszeskin/asher/liver_data/combined_patches_step_2_validation.h5'
     weights_save_path = '/mnt/local/aszeskin/asher/weights'
-    title = 'training_title'
+    title = 'fixed_normalization'
     batch_size = 64
     memory_fraction = 0.2
     do_augmentations = False
@@ -22,6 +22,6 @@ if __name__ == '__main__':
     model = get_model()
     model.summary()
     train_gen = DataGenerator(train_h5_path, 'patches', 'labels', do_augmentations, batch_size=batch_size, dim=dim)
-    validation_gen = DataGenerator(validation_h5_path, 'patches', 'labels', do_augmentations, batch_size=batch_size,
+    validation_gen = DataGenerator(validation_h5_path, 'patches', 'labels', False, batch_size=batch_size,
                                    dim=dim)
     train_model(model, train_gen, validation_gen, 100, weights_save_path, memory_fraction, title)

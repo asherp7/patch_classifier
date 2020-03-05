@@ -60,10 +60,7 @@ class PredictionGenerator(keras.utils.Sequence):
         np.clip(X, self.min_clip_value, self.max_clip_value, out=X)
 
         # Normalize:
-        min_value = np.min(X)
-        max_value = np.max(X)
-        if max_value - min_value > 0:
-            X = (X - min_value) / (max_value - min_value)
+        X = (X - self.min_clip_value) / (self.max_clip_value - self.min_clip_value)
 
         # save indices:
         # Please notice that x,y,z in numpy array is not the same as nifti. for the generation of the
