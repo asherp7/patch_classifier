@@ -66,7 +66,6 @@ def combine_Rafi_data(cropped_data, ct_dir, liver_seg_dir, tumor_dir):
             print()
 
 
-
 def combine_Richard_data(cropped_data, ct_dir, liver_seg_dir, tumor_dir):
     # copy New ct scans to combined folder structure
     for dir_name in os.listdir(cropped_data):
