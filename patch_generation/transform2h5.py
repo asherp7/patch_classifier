@@ -189,9 +189,11 @@ class Transform2h5:
     def create_h5_datasets(self, split=''):
         print('creating', split, 'data at:')
         if split != '':
-            self.output_file_path.replace('.h5', '_'+split+'.h5')
-        print(self.output_file_path)
-        self.hf = h5py.File(self.output_file_path, 'w')
+            output_filepath = self.output_file_path.replace('.h5', '_'+split+'.h5')
+        else:
+            output_filepath = self.output_file_path
+        print(output_filepath)
+        self.hf = h5py.File(output_filepath, 'w')
         self.hf.create_dataset(self.patches_dataset_name,shape=(0, self.patch_size, self.patch_size), chunks=True,
                                maxshape=(None,self.patch_size, self.patch_size))
         self.hf.create_dataset(self.label_dataset_name, shape=(0,), chunks=True, maxshape=(None,))
@@ -217,7 +219,7 @@ class Transform2h5:
 
     def save_all_patches_split_train_validation(self, validation_ratio=0.2):
         print('creating train set:')
-        self.create_h5_datasets('train')
+        self.create_h5_datasets(split='train')
         file_paths = self.get_ct_liver_tumor_filepaths_list()
         num_validation_files = math.floor(len(file_paths) * validation_ratio)
         validation_file_indices = random.sample(range(len(file_paths)), num_validation_files)
@@ -235,7 +237,7 @@ class Transform2h5:
             self.save_single_nifti_patches(scan, roi, tumor)
         self.hf.close()
         print('creating validation set:')
-        self.create_h5_datasets('validation')
+        self.create_h5_datasets(split='validation')
         for idx, (scan_filepath, roi_filepath, tumor_filepath) in enumerate(validation_file_paths):
             print('(', idx+1, '/', len(validation_file_paths), ')', 'processing', scan_filepath, '...')
             scan = self.read_nifti(scan_filepath)

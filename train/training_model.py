@@ -14,7 +14,7 @@ def create_weights_save_dir(save_path, title):
 
 
 def train_model(model, train_gen, validation_gen, num_epochs, save_path, memory_fraction, title):
-    # limit_gpu_memory(memory_fraction)
+    limit_gpu_memory(memory_fraction)
     weights_path = create_weights_save_dir(save_path, title)
     weight_file_path = os.path.join(weights_path, "weights-{epoch:02d}-{val_acc:.2f}.hdf5")
     checkpoint = ModelCheckpoint(weight_file_path, monitor='val_acc')
