@@ -99,7 +99,7 @@ def create_training_set_and_validation_set_combined_data():
     tumor_suffix = '_Tumors'
     patch_size = 35
     sampling_step = 2
-    validation_ratio = 0.1
+    validation_ratio = 0.2
     transform = Transform2h5(nifti_dir_path, output_path,output_filename, ('L', 'P', 'S'), patch_size, sampling_step,
                              roi_dir_path, roi_suffix, tumor_dir_path, tumor_suffix)
     transform.save_all_patches_split_train_validation(validation_ratio)

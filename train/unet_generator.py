@@ -36,9 +36,9 @@ class DataGenerator(keras.utils.Sequence):
         list_IDs_temp = [self.list_IDs[k] for k in indexes]
 
         # Generate data
-        X, y = self.__data_generation(list_IDs_temp)
+        X, y, no_aug_X = self.__data_generation(list_IDs_temp)
 
-        return X, y
+        return X, y, no_aug_X
 
     def on_epoch_end(self):
         'Updates indexes after each epoch'
@@ -69,12 +69,13 @@ class DataGenerator(keras.utils.Sequence):
         # do augmentations
         if self.do_augmentations:
             # transform to uint8:
+            no_aug_X = X
             X = (X * 255).astype(np.uint8)
             # augment batch:
-            X = augment_batch(X)
+            X, augmented_mask = augment_batch(image=X, segmentation_maps=Y)
             # transform back to (0,1) interval:
             X = (X / 255.0).astype(np.float32)
 
-        return X, Y
+        return X, Y, no_aug_X
 
 

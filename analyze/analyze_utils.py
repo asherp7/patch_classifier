@@ -44,16 +44,15 @@ def segmentations_voe(segmentation_1, segmentation_2):
 
 
 def get_ct_liver_tumor_filepaths_list(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_path,
-                                      tumor_suffix='_newTumors_copy', roi_suffix='_LiverSeg'):
+                                      tumor_suffix='_Tumors', roi_suffix='_liverseg'):
     file_names_list = []
     for filename in os.listdir(ct_dir_path):
         tumor_file_path = os.path.join(tumor_dir_path, filename.replace('.nii', tumor_suffix+'.nii'))
-        if filename.startswith('BL'):
+        if filename.startswith('FU'):
             extension = '.nii'
         else:
-            extension = '.nii'
-        # roi_file_path = os.path.join(roi_dir_path, filename.replace('.nii.gz', roi_suffix+extension))
-        roi_file_path = os.path.join(roi_dir_path, filename.replace('.nii', roi_suffix+extension))
+            extension = '.nii.gz'
+        roi_file_path = os.path.join(roi_dir_path, filename.replace('.nii.gz', roi_suffix+extension))
         if not os.path.isfile(roi_file_path):
             print(roi_file_path, 'is missing!')
             continue
@@ -61,7 +60,7 @@ def get_ct_liver_tumor_filepaths_list(ct_dir_path, roi_dir_path, tumor_dir_path,
             print(tumor_file_path, 'is missing!')
             continue
         scan_file_path = os.path.join(ct_dir_path, filename)
-        prediction_file_path = os.path.join(prediction_dir_path, filename).replace('.nii', '_chanvese_seg_expand.nii')
+        prediction_file_path = os.path.join(prediction_dir_path, filename)
         file_names_list.append((scan_file_path, roi_file_path, tumor_file_path, prediction_file_path))
     return file_names_list
 

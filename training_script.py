@@ -17,7 +17,7 @@ if __name__ == '__main__':
     title = 'fixed_normalization'
     batch_size = 64
     memory_fraction = 0.2
-    do_augmentations = False
+    do_augmentations = True
     dim = (35, 35, 1)
     model = get_model()
     model.summary()

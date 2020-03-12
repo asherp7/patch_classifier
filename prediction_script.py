@@ -37,7 +37,8 @@ if __name__ == '__main__':
     # path_to_weights = '/cs/labs/josko/asherp7/follow_up/weights-01-0.93.hdf5'
     # path_to_weights = '/mnt/local/aszeskin/asher/weights/unet_train_all_BL_2020-02-20_13-56-49/weights-05-0.96.hdf5'
     # path_to_weights = '/mnt/local/aszeskin/asher/weights/unet_train_all_BL_2020-02-27_15-01-39/weights-01-0.91.hdf5'
-    path_to_weights = '/mnt/local/aszeskin/asher/weights/combined_data_fixed_liver_seg_2020-03-03_14-12-47/weights-01-0.92.hdf5'
+    # path_to_weights = '/mnt/local/aszeskin/asher/weights/combined_data_fixed_liver_seg_2020-03-03_14-12-47/weights-01-0.92.hdf5'
+    path_to_weights = '/mnt/local/aszeskin/asher/weights/fixed_normalization_2020-03-05_12-24-54/weights-16-0.96.hdf5'
     save_path = '/cs/labs/josko/asherp7/follow_up/outputs/'
     output_path = create_preditcions_save_dir(save_path, 'cnn_predictions')
     limit_gpu_memory(memory_fraction)
