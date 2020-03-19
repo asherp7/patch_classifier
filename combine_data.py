@@ -93,15 +93,30 @@ def combine_Richard_data(cropped_data, ct_dir, liver_seg_dir, tumor_dir):
         print(seg_path)
         print(copy_seg_path)
         shutil.copy(seg_path, copy_seg_path)
+        print()
 
 
 if __name__ == '__main__':
-    combined_data_root = '/cs/labs/josko/asherp7/follow_up/combined_data'
+    # data source
+    # rafi_data = '/cs/labs/josko/asherp7/cases_for_training/validated_liver_seg/Rafi_folder'
+    # cropped_data = '/cs/labs/josko/asherp7/cases_for_training/validated_liver_seg/TrainingSet'
+    # cropped_data = '/cs/labs/josko/asherp7/cases_for_validation'
+    rafi_data = '/cs/labs/josko/asherp7/all_cases/validated_liver_seg/Rafi_folder'
+    cropped_data = '/cs/labs/josko/asherp7/all_cases/validated_liver_seg/TrainingSet'
+
+    # data destination:
+    # combined_data_root = '/cs/labs/josko/asherp7/follow_up/combined_data/training'
+    # combined_data_root = '/cs/labs/josko/asherp7/follow_up/combined_data/validation'
+    combined_data_root = '/cs/labs/josko/asherp7/follow_up/all_combined_data'
+
     ct_dir = os.path.join(combined_data_root, 'ct_scans')
     liver_seg_dir = os.path.join(combined_data_root, 'liver_seg')
     tumor_dir = os.path.join(combined_data_root, 'tumors')
-    rafi_data = '/cs/labs/josko/public/for_aviv/TrainingSet/Rafi_folder'
-    cropped_data = '/cs/labs/josko/public/for_aviv/TrainingSet'
+    # training
+    os.mkdir(ct_dir)
+    os.mkdir(liver_seg_dir)
+    os.mkdir(tumor_dir)
+
 
     combine_Rafi_data(rafi_data, ct_dir, liver_seg_dir, tumor_dir)
     combine_Richard_data(cropped_data, ct_dir, liver_seg_dir, tumor_dir)
