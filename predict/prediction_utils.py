@@ -1,8 +1,7 @@
-from train.patch_model import get_model
 from predict.prediction_generator import PredictionGenerator
-# from training_utils import limit_gpu_memory
 import nibabel as nib
 import numpy as np
+import json
 import os
 
 
@@ -63,5 +62,21 @@ def predict_on_all_scans(ct_dir_path, liver_seg_path, model, path_to_weights, ou
         print(idx, '/', len(file_list), 'predict:', os.path.basename(ct_path))
         predict_nifti(model, ct_path, roi_path, output_dir_path)
 
+
+def predict_on_data_split(data_split_path, split, model, path_to_weights, output_dir_path):
+    '''
+    Predict all videos of given data split
+    :param data_split_path: path to data split dictionary
+    :param split: 'train' or 'validation'
+    :param model: model to use
+    :param path_to_weights: path to trained weights which are loaded into model.
+    :param output_dir_path: path to output directory in which results are saved
+    '''
+    model.load_weights(path_to_weights)
+    with open(data_split_path, 'r') as f:
+        file_list = json.load(f)[split]
+        for idx, (ct_path, roi_path, __) in enumerate(file_list, 1):
+            print(idx, '/', len(file_list), 'predict:', os.path.basename(ct_path))
+            predict_nifti(model, ct_path, roi_path, output_dir_path)
 
 

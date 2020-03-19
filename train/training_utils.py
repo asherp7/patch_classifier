@@ -28,7 +28,9 @@ seq = iaa.Sequential([
     # For the other 50% of all images, we sample the noise per pixel AND
     # channel. This can change the color (not only brightness) of the
     # pixels.
-    iaa.AdditiveGaussianNoise(loc=0, scale=(0.0, 0.05*255)),
+    iaa.Sometimes(0.5,
+                  iaa.AdditiveGaussianNoise(loc=0, scale=(0.0, 0.05*255))
+                  ),
     # Make some images brighter and some darker.
     # In 20% of all cases, we sample the multiplier once per channel,
     # which can end up changing the color of the images.
