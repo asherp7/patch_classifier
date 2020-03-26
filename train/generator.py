@@ -4,6 +4,7 @@ import h5py
 
 from train.training_utils import augment_batch, custom_augment_img
 
+
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
     def __init__(self, h5_filepath, data_name, labels_name, do_augmentations, batch_size=32, dim=(35, 35, 1),

@@ -10,6 +10,7 @@ from scipy import ndimage
 import nibabel as nib
 import numpy.ma as ma
 import numpy as np
+from analyze.analyze_utils import get_filepaths_from_data_split
 
 
 
@@ -129,7 +130,7 @@ def get_scan_connected_componenets_features_and_labeled_array(ct_data,
         features = [volume, bb_volume, bb_occupation, ct_mean, ct_min, ct_max, ct_std, cnn_mean, cnn_min, cnn_max, cnn_std]
         names = ['volume', 'bb_volume', 'bb_occupation', 'ct_mean', 'ct_min', 'ct_max', 'ct_std', 'cnn_mean', 'cnn_min', 'cnn_max', 'cnn_std']
         feature_list.append(features)
-        print(list(zip(names, features)))
+        # print(list(zip(names, features)))
     return feature_list, labeled_array, num_components
 
 
@@ -219,7 +220,7 @@ def apply_selection_on_cnn_and_chan_vase(classifier, ct_data, cnn_pred_data, cha
 
 
 def apply_selection_on_dir(classifier, filenames, output_dir):
-    for idx, (ct_filename, tumor_filename, cnn_pred_filename, chan_vase_filename) in enumerate(filenames):
+    for idx, (ct_filename, __, tumor_filename, cnn_pred_filename, chan_vase_filename) in enumerate(filenames, 1):
         print('(', idx, '/', len(filenames), ') processing', os.path.basename(ct_filename))
         ct_data = nib.load(ct_filename).get_fdata()
         cnn_pred_data = nib.load(cnn_pred_filename).get_fdata()
@@ -227,7 +228,6 @@ def apply_selection_on_dir(classifier, filenames, output_dir):
         selected = apply_selection_on_cnn_and_chan_vase(classifier, ct_data, cnn_pred_data, chan_vase_data)
         new_filepath = os.path.join(output_dir, os.path.basename(ct_filename))
         save_data_as_new_nifti_file(chan_vase_filename, selected, new_filepath)
-
 
 
 def remove_small_components_and_save(old_dirpath, new_dirpath, cc_min_size=10):
@@ -294,17 +294,16 @@ def remove_small_components_and_save(old_dirpath, new_dirpath, cc_min_size=10):
 #     save_data_as_new_nifti_file(old_file_path, selected, new_filepath)
 
 if __name__ == '__main__':
-    ct_dir_path = '/cs/labs/josko/asherp7/follow_up/combined_data/ct_scans'
-    tumor_dir_path = '/cs/labs/josko/asherp7/follow_up/combined_data/tumors'
-    cnn_pred_dir_path = '/cs/labs/josko/asherp7/follow_up/outputs/results_27_2/predictions'
-    chan_vase_remove_small_cc_dir_path = '/cs/labs/josko/asherp7/follow_up/outputs/results_27_2/chan_vese_remove_small_cc'
-    # old_dir_path= '/cs/labs/josko/asherp7/follow_up/outputs/results_27_2/chan_vese'
-    # remove_small_components_and_save(old_dir_path, chan_vase_dir_path)
-    selection_output_folder = '/cs/labs/josko/asherp7/follow_up/outputs/results_27_2/selection'
+    cnn_pred_dir_path = '/cs/labs/josko/asherp7/follow_up/outputs/validated_liver_seg_results/cnn_predictions_2020-03-12_21-35-36'
+    chan_vase_remove_small_cc_dir_path = '/cs/labs/josko/asherp7/follow_up/outputs/validated_liver_seg_results/chan_vese_results'
+    selection_output_folder = '/cs/labs/josko/asherp7/follow_up/outputs/validated_liver_seg_results/selection'
 
 
-    filenames = get_filenames(ct_dir_path, tumor_dir_path, cnn_pred_dir_path, chan_vase_remove_small_cc_dir_path)
+    # filenames = get_filenames(ct_dir_path, tumor_dir_path, cnn_pred_dir_path, chan_vase_remove_small_cc_dir_path)
 
+    data_dir_path = '/mnt/local/aszeskin/asher/liver_data'
+    split = 'validation'
+    filenames = get_filepaths_from_data_split(data_dir_path, split, cnn_pred_dir_path)
     # create gt and features:
     # features, gt = create_random_forest_features_and_gt(filenames)
     # np.save('features', features)

@@ -3,15 +3,17 @@ from train.unet_generator import DataGenerator
 from train.attention_unet_model import get_model
 
 if __name__ == '__main__':
-    train_h5_path = '/mnt/local/aszeskin/asher/liver_data/unet_BL_all_patches.h5'
-    validation_h5_path = '/mnt/local/aszeskin/asher/liver_data/unet_FU_patches.h5'
+    train_h5_path = '/mnt/local/aszeskin/asher/liver_data/unet_26_3/unet_train.h5'
+    validation_h5_path = '/mnt/local/aszeskin/asher/liver_data/unet_26_3/unet_validation.h5'
     weights_save_path = '/mnt/local/aszeskin/asher/weights'
-    title = 'unet_train_all_BL'
-    batch_size = 16
+    title = 'unet_96_patches'
+    batch_size = 8
     memory_fraction = 0.5
     do_augmentations = False
-    dim = (64, 64, 1)
-    model = get_model()
+    dim = (96, 96, 1)
+    dropout_rate = 0.2
+    batch_normalization = True
+    model = get_model(input_shape=dim, drop=dropout_rate, bn=batch_normalization)
     model.summary()
     train_gen = DataGenerator(train_h5_path, 'patches', 'mask_patches', do_augmentations, batch_size=batch_size, dim=dim)
     validation_gen = DataGenerator(validation_h5_path, 'patches', 'mask_patches', do_augmentations, batch_size=batch_size, dim=dim)

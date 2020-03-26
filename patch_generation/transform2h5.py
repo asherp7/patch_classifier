@@ -221,8 +221,18 @@ class Transform2h5:
         print('creating train set:')
         self.create_h5_datasets(split='train')
         file_paths = self.get_ct_liver_tumor_filepaths_list()
-        num_validation_files = math.floor(len(file_paths) * validation_ratio)
-        validation_file_indices = random.sample(range(len(file_paths)), num_validation_files)
+        # num_validation_files = math.floor(len(file_paths) * validation_ratio)
+        # validation_file_indices = random.sample(range(len(file_paths)), num_validation_files)
+
+        # Temp split:
+        validation_file_names = ['BL32', 'H_G_24_11_2019', 'B_S_Y_29_04_2019', 'BL36', 'FU29']
+        validation_file_indices = []
+        for file_name in validation_file_names:
+            for i in range(len(file_paths)):
+                if file_name in file_paths[i][0]:
+                    validation_file_indices.append(i)
+        print(validation_file_indices)
+
         train_file_indices = list(set(range(len(file_paths))) - set(validation_file_indices))
         train_file_paths = [file_paths[i] for i in train_file_indices]
         validation_file_paths = [file_paths[i] for i in validation_file_indices]

@@ -3,12 +3,12 @@ from train.generator import DataGenerator
 from train.patch_model import get_model
 
 if __name__ == '__main__':
-    train_h5_path = '/mnt/local/aszeskin/asher/liver_data/combined_step_2_training.h5'
-    validation_h5_path = '/mnt/local/aszeskin/asher/liver_data/combined_step_2_validation.h5'
+    train_h5_path = '/mnt/local/aszeskin/asher/liver_data/seperated_26_3/combined_patches_step_2_train.h5'
+    validation_h5_path = '/mnt/local/aszeskin/asher/liver_data/seperated_26_3/combined_patches_step_2_validation.h5'
     # train_h5_path = '/mnt/local/aszeskin/asher/liver_data/combined_patches_step_2_train.h5'
     # validation_h5_path = '/mnt/local/aszeskin/asher/liver_data/combined_patches_step_2_validation.h5'
     weights_save_path = '/mnt/local/aszeskin/asher/weights'
-    title = 'fixed_liver_segmentation_with_augs_small_validation'
+    title = 'new_split_fixed_liver_segmentation_with_augs'
     batch_size = 64
     memory_fraction = 0.2
     do_augmentations = True

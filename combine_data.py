@@ -113,9 +113,9 @@ if __name__ == '__main__':
     liver_seg_dir = os.path.join(combined_data_root, 'liver_seg')
     tumor_dir = os.path.join(combined_data_root, 'tumors')
     # training
-    os.mkdir(ct_dir)
-    os.mkdir(liver_seg_dir)
-    os.mkdir(tumor_dir)
+    # os.mkdir(ct_dir)
+    # os.mkdir(liver_seg_dir)
+    # os.mkdir(tumor_dir)
 
 
     combine_Rafi_data(rafi_data, ct_dir, liver_seg_dir, tumor_dir)
