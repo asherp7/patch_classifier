@@ -92,18 +92,18 @@ def load_segs(dir_path, pred_path, pred_name='prediction.nii.gz.gz', truth_name=
     :return: (gt_seg, predicted_seg) or (gt_seg, predicted_seg, pix_dims)
     """
     pred_full_path = os.path.join(dir_path, pred_path, pred_name)
-    pred.nii.gz = nib.load(pred_full_path)
-    pred_seg = pred.nii.gz.get_data()
+    pred = nib.load(pred_full_path)
+    pred_seg = pred.get_data()
 
     if not truth_dir_path:
         truth_dir_path = dir_path
-        truth_name = "truth.nii.gz.gz"
+        truth_name = "Tumors.nii.gz"
     gt_path = os.path.join(truth_dir_path, pred_path, truth_name)
-    gt.nii.gz = nib.load(gt_path)
-    gt_seg = gt.nii.gz.get_data()
+    gt = nib.load(gt_path)
+    gt_seg = gt.get_data()
 
     if load_pix_dims:
-        pix_dims = gt.nii.gz.header.get_zooms()
+        pix_dims = gt.header.get_zooms()
         return gt_seg, pred_seg, pix_dims
 
     return gt_seg, pred_seg
@@ -634,15 +634,16 @@ def main(logger, prediction_dirs, orig_data_dir, pred_name="prediction_post_resh
 
 
 if __name__ == "__main__":
-    orig_data_dir = "/cs/casmip/clara.herscu/git/AdiUnet/Unet3d/brats/data/preprocessed_all_cases_cropped_with_prior/"
-
+    # orig_data_dir = "/cs/casmip/clara.herscu/git/AdiUnet/Unet3d/brats/data/preprocessed_all_cases_cropped_with_prior/"
+    pred_dirs = "/cs/labs/josko/asherp7/follow_up/outputs/pred_2020-03-26_10-20-24/grouped_results/"
+    orig_data_dir = ''
     parser = argparse.ArgumentParser(description="arguments for training process")
     parser.add_argument("--pred_dirs", dest='pred_dirs', help="list of prediction directories to evaluate",
-                        nargs='+', default=[])
+                        nargs='+', default=[pred_dirs])
     parser.add_argument("--orig_dir", dest="orig_dir", help="name of original data directory", default=orig_data_dir)
     parser.add_argument("--log", dest="log_name", help="name of the logger file", default="logs/evaluate.log")
     parser.add_argument("--pred_name", dest="pred_name", help="name of the prediction file to evaluate",
-                        default="prediction_post_reshaped.nii.gz.gz")
+                        default="prediction.nii.gz")
 
     # parse args
     args = parser.parse_args()

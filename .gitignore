@@ -82,3 +82,6 @@ fabric.properties
 
 # numpy files:
 *.npy
+
+# csv files:
+*.csv

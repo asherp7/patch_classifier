@@ -71,13 +71,20 @@ def analyze_dataset(data_dir_path, split, prediction_dir_path):
     file_paths = get_filepaths_from_data_split(data_dir_path, split, prediction_dir_path)
 
     # file_paths = get_ct_liver_tumor_filepaths_list(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_path)
-    for idx, (ct_path, roi_path, tumor_path, __, chan_vese, selection) in enumerate(file_paths, 1):
+    for idx, (ct_path, roi_path, tumor_path, threshold_pred_filepath, chan_vese, selection) in enumerate(file_paths, 1):
         filename = os.path.basename(ct_path)
         gt = nib.load(tumor_path).get_data()
-        # prediction = nib.load(chan_vese).get_data()
+        roi = nib.load(roi_path).get_data()
+        gt = np.logical_and(gt, roi)
         prediction = nib.load(selection).get_data()
-        dice_loss_dict[filename] = segmentations_dice(gt, prediction)
+        # prediction = nib.load(selection).get_data()
+        # fill_holes = morphology.binary_fill_holes(prediction,
+        #                                           np.ones((25, 25, 5)))
+        fill_holes = morphology.binary_closing(prediction, np.ones((25, 25, 25)))
+        dice_loss_dict[filename] = segmentations_dice(gt, fill_holes)
         print(idx, '/', len(file_paths), filename, ', dice:', dice_loss_dict[filename])
+
+
     return dice_loss_dict
 
 
@@ -86,7 +93,8 @@ def analyze_dataset_after_threshold_and_filter_small_components(prediction_dir_p
                                                                 min_size,
                                                                 threshold=None,
                                                                 save_path=None,
-                                                                split='validation'):
+                                                                split='validation',
+                                                                fill_holes_size=3):
     dice_loss_dict = {}
     if threshold:
         apply_otsu = False
@@ -95,16 +103,18 @@ def analyze_dataset_after_threshold_and_filter_small_components(prediction_dir_p
     # file_paths = get_ct_liver_tumor_filepaths_list(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_path,
     #                                                roi_suffix='_liverseg')
     file_paths = get_filepaths_from_data_split(data_dir_path, split, prediction_dir_path)
-    for idx, (ct_path, roi_path, tumor_path, pred_path, __) in enumerate(file_paths, 1):
+    for idx, (ct_path, roi_path, tumor_path, pred_path, __, __) in enumerate(file_paths, 1):
         filename = os.path.basename(ct_path)
+        roi = nib.load(roi_path).get_data()
         annotation = nib.load(tumor_path).get_data()
+        annotation = np.logical_and(annotation, roi)
         probabilty_map = nib.load(pred_path).get_data()
         if apply_otsu:
             threshold, prediction = apply_otsu_threshold_on_probability_map(probabilty_map)
         else:
             prediction = threshold_probability_map(probabilty_map, threshold)
         filtered_prediction = remove_small_connected_componenets_3D(prediction, min_size)
-        fill_holes = morphology.binary_fill_holes(filtered_prediction, np.ones((3, 3, 3)))
+        fill_holes = morphology.binary_fill_holes(filtered_prediction, np.ones((fill_holes_size, fill_holes_size, fill_holes_size)))
         case_name = os.path.basename(ct_path)
         threshold_dice_loss = segmentations_dice(prediction, annotation)
         filtered_dice_loss = segmentations_dice(filtered_prediction, annotation)
@@ -137,10 +147,11 @@ def get_filepaths_from_data_split(data_dir_path, split, pred_path):
     data_split = get_data_split(data_dir_path)
     file_names_list = []
     for ct_filepath, roi_filepath, tumor_seg_filepath in data_split[split]:
-        pred_filepath = os.path.join(pred_path, os.path.basename(ct_filepath))
-        chan_vese_filepath = os.path.join(os.path.dirname(pred_path), 'chan_vese_results', 'chanvese_seg_expand_' + os.path.basename(pred_filepath))
+        pred_filepath = os.path.join(pred_path, 'cnn_predictions', os.path.basename(ct_filepath))
+        threshold_pred_filepath = os.path.join(pred_path, 'threshold_cnn_predictions', 'threshold_'+os.path.basename(ct_filepath))
+        # chan_vese_filepath = os.path.join(pred_path, 'chan_vese_results', 'chanvese_seg_expand_' + os.path.basename(pred_filepath))
         selection_filepath = os.path.join(os.path.dirname(pred_path), 'selection', os.path.basename(pred_filepath))
-        file_names_list.append((ct_filepath, roi_filepath, tumor_seg_filepath, pred_filepath, chan_vese_filepath, selection_filepath))
+        file_names_list.append((ct_filepath, roi_filepath, tumor_seg_filepath, pred_filepath, threshold_pred_filepath, selection_filepath))
     return file_names_list
 
 
