@@ -17,8 +17,8 @@ import cv2
 
 # # compute dice score for all predictions after applying Chan Vesse algorithm:
 # if __name__ == '__main__':
-#     prediction_dir_path = '/cs/labs/josko/asherp7/follow_up/outputs/pred_2020-03-26_10-20-24/selection'
-#     data_dir_path = '/mnt/local/aszeskin/asher/liver_data/seperated_26_3'
+#     prediction_dir_path = '/cs/labs/josko/asherp7/follow_up/outputs/validation_cnn_predictions_5_4_2020_2020-04-05_11-13-12/'
+#     data_dir_path = '/cs/labs/josko/asherp7/follow_up/data_3_4_2020'
 #     split = 'validation'
 #     # tumor_seg_dir_path = '/cs/labs/josko/asherp7/follow_up/all_combined_data/tumors'
 #     # print_tumor_burden_per_ct(tumor_seg_dir_path)
@@ -37,13 +37,16 @@ if __name__ == '__main__':
     # prediction_path = '/cs/labs/josko/asherp7/follow_up/outputs/pred_2020-03-26_10-20-24'
     # data_dir_path = '/mnt/local/aszeskin/asher/liver_data/seperated_26_3'
     # prediction_path = '/cs/labs/josko/asherp7/follow_up/outputs/validation_cnn_predictions_1_4_2020_2020-04-01_01-57-47'
-    prediction_path = '/cs/labs/josko/asherp7/follow_up/outputs/train_cnn_predictions_1_4_2020_2020-04-01_02-21-07/'
-    data_dir_path = '/cs/labs/josko/asherp7/follow_up/data_31_3_2020'
+    # prediction_path = '/cs/labs/josko/asherp7/follow_up/outputs/train_cnn_predictions_1_4_2020_2020-04-01_02-21-07/'
+    # data_dir_path = '/cs/labs/josko/asherp7/follow_up/data_31_3_2020'
+    prediction_path = '/cs/labs/josko/asherp7/follow_up/outputs/train_cnn_predictions_5_4_2020_2020-04-05_12-10-11'
+    data_dir_path = '/cs/labs/josko/asherp7/follow_up/data_3_4_2020'
+    # prediction_path = '/cs/labs/josko/asherp7/follow_up/outputs/validation_cnn_predictions_5_4_2020_2020-04-05_11-13-12/'
     min_size = 80
     # min_size = 100
     threshold = 933
-    # threshold = 940
-    save_path = os.path.join(prediction_path, 'threshold_cnn_predictions')
+    # threshold = 900
+    save_path = os.path.join(prediction_path, 'threshold_'+str(threshold)+'_cnn_predictions')
     if not os.path.isdir(save_path):
         os.mkdir(save_path)
     dice_dict = analyze_dataset_after_threshold_and_filter_small_components(prediction_path,

@@ -104,8 +104,43 @@ def get_scan_connected_componenets_gt(chan_vase_data,
 
 
 def get_scan_connected_componenets_features_and_labeled_array(ct_data,
-                                                              cnn_pred_data,
-                                                              chan_vase_data):
+                                                              cnn_pred_data):
+    feature_list = []
+    structure = ndimage.morphology.generate_binary_structure(cnn_pred_data.ndim, cnn_pred_data.ndim)
+    labeled_array, num_components = ndimage.label(cnn_pred_data, structure)
+    print('num_components', num_components)
+    for label in range(num_components):
+        component = labeled_array == label + 1
+        volume = component.sum()
+        rmin, rmax, cmin, cmax, zmin, zmax = bbox_3D(component)
+        row_len = rmax - rmin
+        col_len = cmax - cmin
+        depth_len = zmax - zmin
+        bb_volume = row_len * col_len * depth_len
+        if bb_volume == 0:
+            bb_occupation = 10000
+        else:
+            bb_occupation = volume / bb_volume
+        ct_component = ct_data[component]
+        ct_mean = np.sum(ct_component)
+        ct_min = np.min(ct_component)
+        ct_max = np.max(ct_component)
+        ct_std = np.std(ct_component)
+        cnn_component = cnn_pred_data[component]
+        cnn_mean = np.mean(cnn_component)
+        cnn_min = np.min(cnn_component)
+        cnn_max = np.max(cnn_component)
+        cnn_std = np.std(cnn_component)
+        features = [volume, bb_volume, bb_occupation, ct_mean, ct_min, ct_max, ct_std, cnn_mean, cnn_min, cnn_max, cnn_std]
+        names = ['volume', 'bb_volume', 'bb_occupation', 'ct_mean', 'ct_min', 'ct_max', 'ct_std', 'cnn_mean', 'cnn_min', 'cnn_max', 'cnn_std']
+        feature_list.append(features)
+        # print(list(zip(names, features)))
+    return feature_list, labeled_array, num_components
+
+
+def get_scan_connected_componenets_features_and_labeled_array_from_chan_vese(ct_data,
+                                                                             cnn_pred_data,
+                                                                             chan_vase_data):
     feature_list = []
     structure = ndimage.morphology.generate_binary_structure(chan_vase_data.ndim, chan_vase_data.ndim)
     labeled_array, num_components = ndimage.label(chan_vase_data, structure)
@@ -162,9 +197,9 @@ def create_random_forest_features(filenames):
         ct_data = nib.load(ct_filename).get_fdata()
         cnn_pred_data = nib.load(cnn_pred_filename).get_fdata()
         chan_vase_data = nib.load(chan_vase_filename).get_fdata()
-        feature_list, _, _ = get_scan_connected_componenets_features_and_labeled_array(ct_data,
-                                                                                       cnn_pred_data,
-                                                                                       chan_vase_data)
+        feature_list, _, _ = get_scan_connected_componenets_features_and_labeled_array_from_chan_vese(ct_data,
+                                                                                                      cnn_pred_data,
+                                                                                                      chan_vase_data)
         all_features_list.extend(feature_list)
     return np.array(all_features_list)
 
@@ -207,6 +242,25 @@ def train_random_forest(num_estimatores, features, gt, class_weight=None):
     return clf
 
 
+def apply_selection_on_cnn(classifier, ct_data, cnn_pred_data):
+    """
+
+    :param classifier:
+    :param cnn_pred_data:
+    :param chan_vase_data:
+    :return:
+    """
+    features, labeled_array, num_components = get_scan_connected_componenets_features_and_labeled_array(ct_data,
+                                                                                                        cnn_pred_data)
+    selected_arr = np.zeros(cnn_pred_data.shape)
+    predictions = classifier.predict(features)
+    for label_idx in range(num_components):
+        if predictions[label_idx]:
+            component = labeled_array == label_idx + 1
+            selected_arr[component] = 1
+    return selected_arr
+
+
 def apply_selection_on_cnn_and_chan_vase(classifier, ct_data, cnn_pred_data, chan_vase_data):
     """
 
@@ -228,14 +282,14 @@ def apply_selection_on_cnn_and_chan_vase(classifier, ct_data, cnn_pred_data, cha
 
 
 def apply_selection_on_dir(classifier, filenames, output_dir):
-    for idx, (ct_filename, __, tumor_filename, cnn_pred_filename, chan_vase_filename) in enumerate(filenames, 1):
+    for idx, (ct_filename, __, tumor_filename, cnn_pred_filename, threshold_prediction) in enumerate(filenames, 1):
         print('(', idx, '/', len(filenames), ') processing', os.path.basename(ct_filename))
         ct_data = nib.load(ct_filename).get_fdata()
         cnn_pred_data = nib.load(cnn_pred_filename).get_fdata()
-        chan_vase_data = nib.load(chan_vase_filename).get_fdata()
-        selected = apply_selection_on_cnn_and_chan_vase(classifier, ct_data, cnn_pred_data, chan_vase_data)
+        # chan_vase_data = nib.load(chan_vase_filename).get_fdata()
+        selected = apply_selection_on_cnn(classifier, ct_data, threshold_prediction)
         new_filepath = os.path.join(output_dir, os.path.basename(ct_filename))
-        save_data_as_new_nifti_file(chan_vase_filename, selected, new_filepath)
+        save_data_as_new_nifti_file(threshold_prediction, selected, new_filepath)
 
 
 def remove_small_components_and_save(old_dirpath, new_dirpath, cc_min_size=10):
@@ -248,12 +302,12 @@ def remove_small_components_and_save(old_dirpath, new_dirpath, cc_min_size=10):
         save_data_as_new_nifti_file(old_filepath, clean_mask, new_filepath)
 
 
-def get_filepaths_from_data_split(data_dir_path, split, pred_path):
+def get_filepaths_from_data_split(data_dir_path, split, pred_path, thresh_folder_name):
     data_split = get_data_split(data_dir_path)
     file_names_list = []
     for ct_filepath, roi_filepath, tumor_seg_filepath in data_split[split]:
         pred_filepath = os.path.join(pred_path, 'cnn_predictions', os.path.basename(ct_filepath))
-        threshold_pred_filepath = os.path.join(pred_path, 'threshold_cnn_predictions', 'threshold_'+os.path.basename(ct_filepath))
+        threshold_pred_filepath = os.path.join(pred_path, thresh_folder_name, os.path.basename(ct_filepath))
         # chan_vese_filepath = os.path.join(pred_path, 'chan_vese_results', 'chanvese_seg_expand_' + os.path.basename(pred_filepath))
         file_names_list.append((ct_filepath, roi_filepath, tumor_seg_filepath, pred_filepath, threshold_pred_filepath))
     return file_names_list
@@ -300,20 +354,21 @@ def balance_data_by_augmentation(path_to_labels, path_to_features):
 
 
 if __name__ == '__main__':
-    # # Create Selection random forest training features and labels:
-    # cnn_pred_dir_path = '/cs/labs/josko/asherp7/follow_up/outputs/train_cnn_predictions_2020-03-26_13-46-08'
-    # selection_output_folder = os.path.join(cnn_pred_dir_path, 'selection')
-    # if not os.path.isdir(selection_output_folder):
-    #     os.mkdir(selection_output_folder)
-    #
-    # data_dir_path = '/mnt/local/aszeskin/asher/liver_data/seperated_26_3'
-    # split = 'train'
-    # filenames = get_filepaths_from_data_split(data_dir_path, split, cnn_pred_dir_path)
-    #
-    # # create gt and features:
-    # features, gt = create_random_forest_features_and_gt(filenames)
-    # np.save('features', features)
-    # np.save('gt', gt)
+    # Create Selection random forest training features and labels:
+    cnn_pred_dir_path = '/cs/labs/josko/asherp7/follow_up/outputs/train_cnn_predictions_5_4_2020_2020-04-05_12-10-11'
+    thresh_folder_name = 'threshold_933_cnn_predictions'
+    selection_output_folder = os.path.join(cnn_pred_dir_path, 'selection')
+    if not os.path.isdir(selection_output_folder):
+        os.mkdir(selection_output_folder)
+
+    data_dir_path = '/cs/labs/josko/asherp7/follow_up/data_3_4_2020'
+    split = 'train'
+    filenames = get_filepaths_from_data_split(data_dir_path, split, cnn_pred_dir_path, thresh_folder_name)
+
+    # create gt and features:
+    features, gt = create_random_forest_features_and_gt(filenames)
+    np.save('features', features)
+    np.save('gt', gt)
     path_to_labels, path_to_features = 'gt.npy', 'features.npy'
     balance_data_by_augmentation(path_to_labels, path_to_features)
 
@@ -331,10 +386,10 @@ if __name__ == '__main__':
     split = 'validation'
     # data_dir_path = '/mnt/local/aszeskin/asher/liver_data/seperated_26_3'
     # validation_cnn_pred_dir_path = '/cs/labs/josko/asherp7/follow_up/outputs/pred_2020-03-26_10-20-24'
-    data_dir_path = '/cs/labs/josko/asherp7/follow_up/data_31_3_2020'
-    validation_cnn_pred_dir_path = '/cs/labs/josko/asherp7/follow_up/outputs/validation_cnn_predictions_1_4_2020_2020-04-01_01-57-47'
+    data_dir_path = '/cs/labs/josko/asherp7/follow_up/data_3_4_2020'
+    validation_cnn_pred_dir_path = '/cs/labs/josko/asherp7/follow_up/outputs/validation_cnn_predictions_5_4_2020_2020-04-05_11-13-12/'
     validation_selection_output_folder = os.path.join(validation_cnn_pred_dir_path, 'selection')
     if not os.path.isdir(validation_selection_output_folder):
         os.mkdir(validation_selection_output_folder)
-    validation_filenames = get_filepaths_from_data_split(data_dir_path, split, validation_cnn_pred_dir_path)
+    validation_filenames = get_filepaths_from_data_split(data_dir_path, split, validation_cnn_pred_dir_path, thresh_folder_name)
     apply_selection_on_dir(classifier, validation_filenames, validation_selection_output_folder)

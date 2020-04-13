@@ -88,6 +88,49 @@ def analyze_dataset(data_dir_path, split, prediction_dir_path):
     return dice_loss_dict
 
 
+# def save_thresholded_predictions(prediction_dir_path, data_dir_path, split='validation'):
+#     dice_loss_dict = {}
+#     if threshold:
+#         apply_otsu = False
+#     else:
+#         apply_otsu = True
+#
+#     file_paths = get_filepaths_from_data_split(data_dir_path, split, prediction_dir_path)
+#     for idx, (ct_path, roi_path, tumor_path, pred_path, __, __) in enumerate(file_paths, 1):
+#         filename = os.path.basename(ct_path)
+#         roi = nib.load(roi_path).get_data()
+#         annotation = nib.load(tumor_path).get_data()
+#         annotation = np.logical_and(annotation, roi)
+#         probabilty_map = nib.load(pred_path).get_data()
+#         if apply_otsu:
+#             threshold, prediction = apply_otsu_threshold_on_probability_map(probabilty_map)
+#         else:
+#             prediction = threshold_probability_map(probabilty_map, threshold)
+#         filtered_prediction = remove_small_connected_componenets_3D(prediction, min_size)
+#         fill_holes = morphology.binary_fill_holes(filtered_prediction,
+#                                                   np.ones((fill_holes_size, fill_holes_size, fill_holes_size)))
+#         case_name = os.path.basename(ct_path)
+#         threshold_dice_loss = segmentations_dice(prediction, annotation)
+#         filtered_dice_loss = segmentations_dice(filtered_prediction, annotation)
+#         fill_holes_dice_loss = segmentations_dice(fill_holes, annotation)
+#         dice_loss_dict[filename] = {"threshold": threshold_dice_loss,
+#                                     "filtered": filtered_dice_loss,
+#                                     "fill": fill_holes_dice_loss}
+#         print(idx, '/', len(file_paths), case_name, ', threshold:', round(threshold, 2), ', threshold dice: ',
+#               round(threshold_dice_loss, 2), ", filtered dice loss", round(filtered_dice_loss, 2),
+#               ', fill holes dice:', round(fill_holes_dice_loss, 2))
+#         if save_path:
+#             filtered_output_file_path = os.path.join(save_path, 'filtered_' + case_name)
+#             mask_output_filepath = os.path.join(save_path, 'threshold_' + case_name)
+#             save_data_as_new_nifti_file(pred_path, filtered_prediction, filtered_output_file_path)
+#             save_data_as_new_nifti_file(pred_path, prediction, mask_output_filepath)
+#     print('threshold mean dice:',
+#           round(sum([x["threshold"] for x in dice_loss_dict.values()]) / len(dice_loss_dict), 3))
+#     print('filtered mean dice:', round(sum([x["filtered"] for x in dice_loss_dict.values()]) / len(dice_loss_dict), 3))
+#     print('fill holes mean dice:', round(sum([x["fill"] for x in dice_loss_dict.values()]) / len(dice_loss_dict), 3))
+#     return dice_loss_dict
+
+
 def analyze_dataset_after_threshold_and_filter_small_components(prediction_dir_path,
                                                                 data_dir_path,
                                                                 min_size,
@@ -126,9 +169,9 @@ def analyze_dataset_after_threshold_and_filter_small_components(prediction_dir_p
               round(threshold_dice_loss, 2), ", filtered dice loss", round(filtered_dice_loss, 2),
               ', fill holes dice:', round(fill_holes_dice_loss, 2))
         if save_path:
-            filtered_output_file_path = os.path.join(save_path, 'filtered_'+case_name)
-            mask_output_filepath = os.path.join(save_path, 'threshold_'+case_name)
-            save_data_as_new_nifti_file(pred_path, filtered_prediction, filtered_output_file_path)
+            # filtered_output_file_path = os.path.join(save_path, 'filtered_'+case_name)
+            mask_output_filepath = os.path.join(save_path, case_name)
+            # save_data_as_new_nifti_file(pred_path, filtered_prediction, filtered_output_file_path)
             save_data_as_new_nifti_file(pred_path, prediction, mask_output_filepath)
     print('threshold mean dice:', round(sum([x["threshold"] for x in dice_loss_dict.values()]) / len(dice_loss_dict), 3))
     print('filtered mean dice:', round(sum([x["filtered"] for x in dice_loss_dict.values()]) / len(dice_loss_dict), 3))
@@ -149,9 +192,9 @@ def get_filepaths_from_data_split(data_dir_path, split, pred_path):
     for ct_filepath, roi_filepath, tumor_seg_filepath in data_split[split]:
         pred_filepath = os.path.join(pred_path, 'cnn_predictions', os.path.basename(ct_filepath))
         threshold_pred_filepath = os.path.join(pred_path, 'threshold_cnn_predictions', 'threshold_'+os.path.basename(ct_filepath))
-        # chan_vese_filepath = os.path.join(pred_path, 'chan_vese_results', 'chanvese_seg_expand_' + os.path.basename(pred_filepath))
-        selection_filepath = os.path.join(os.path.dirname(pred_path), 'selection', os.path.basename(pred_filepath))
-        file_names_list.append((ct_filepath, roi_filepath, tumor_seg_filepath, pred_filepath, threshold_pred_filepath, selection_filepath))
+        chan_vese_filepath = os.path.join(pred_path, 'chanvese', 'chanvese_seg_expand_' + os.path.basename(pred_filepath))
+        # selection_filepath = os.path.join(os.path.dirname(pred_path), 'selection', os.path.basename(pred_filepath))
+        file_names_list.append((ct_filepath, roi_filepath, tumor_seg_filepath, pred_filepath, threshold_pred_filepath, chan_vese_filepath))
     return file_names_list
 
 
