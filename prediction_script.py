@@ -27,21 +27,24 @@ def create_preditcions_save_dir(save_path, title):
 
 if __name__ == '__main__':
     memory_fraction = 0.2
-
-    ct_dir_path = '/cs/labs/josko/asherp7/follow_up/data_31_3_2020/ct_scans'
-    liver_seg_path = '/cs/labs/josko/asherp7/follow_up/data_31_3_2020/liver_seg'
-    path_to_weights = '/mnt/local/aszeskin/asher/weights/dataset_75_cases_2020-03-31_17-57-05/weights-06-0.87.hdf5'
-    data_split_path = '/mnt/local/aszeskin/asher/weights/dataset_75_cases_2020-03-31_17-57-05/data_split.json'
+    data_root_path = '/cs/labs/josko/asherp7/follow_up/data_3_4_2020'
+    ct_dir_path = os.path.join(data_root_path, 'ct_scans')
+    liver_seg_path = os.path.join(data_root_path, 'liver_seg')
+    path_to_weights = '/mnt/local/aszeskin/asher/weights/dataset_105_cases_step_3_2020-04-03_16-35-30/weights-20-0.90.hdf5'
+    data_split_path = '/mnt/local/aszeskin/asher/liver_data/data_split.json'
 
     save_path = '/cs/labs/josko/asherp7/follow_up/outputs/'
-    output_path = create_preditcions_save_dir(save_path, 'train_cnn_predictions_1_4_2020')
-    if not os.path.isdir(output_path):
-        os.mkdir(output_path)
+    # split = 'validation'
+    split = 'train'
+    output_path = create_preditcions_save_dir(save_path, split+'_predictions')
+    cnn_output_path = os.path.join(output_path, 'cnn_predictions')
+    if not os.path.isdir(cnn_output_path):
+        os.mkdir(cnn_output_path)
     limit_gpu_memory(memory_fraction)
     model = get_model()
     model.summary()
     # predict_on_all_scans(ct_dir_path, liver_seg_path, model, path_to_weights, output_path)
-    split = 'train'
+
     predict_on_data_split(data_split_path, split, model, path_to_weights, output_path)
 
     # # predict on single file:
