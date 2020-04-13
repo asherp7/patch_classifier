@@ -4,6 +4,7 @@ import h5py
 
 from train.training_utils import augment_batch, custom_augment_img
 
+
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
     def __init__(self, h5_filepath, data_name, labels_name, do_augmentations, batch_size=32, dim=(35, 35, 1),
@@ -56,7 +57,7 @@ class DataGenerator(keras.utils.Sequence):
         for i, ID in enumerate(list_IDs_temp):
             # Store sample
             patch = self.hf[self.data_name][ID]
-            X[i,] = np.expand_dims(patch, axis=-1)
+            X[i, ] = np.expand_dims(patch, axis=-1)
 
             # Store class
             y[i] = self.hf[self.labels_name][ID]
@@ -76,6 +77,9 @@ class DataGenerator(keras.utils.Sequence):
             # transform back to (0,1) interval:
             X = (X / 255.0).astype(np.float32)
 
+        # Softmax:
         return X, keras.utils.to_categorical(y, num_classes=self.n_classes)
 
+        # Sigmoid:
+        # return X, y
 

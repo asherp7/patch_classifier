@@ -41,7 +41,7 @@ def attention_block(up_features, skip_features, F_int):
     return mult
 
 
-def get_model(input_shape=(64, 64, 1), pretrained_weights=None, use_atten=False, drop=False, bn=False):
+def get_model(input_shape=(96, 96, 1), pretrained_weights=None, use_atten=False, drop=None, bn=False):
     inputs = Input(shape=input_shape)
 
     conv_down1 = conv_block(inputs, num_channels=64, drop=drop, bn=bn)
@@ -71,7 +71,7 @@ def get_model(input_shape=(64, 64, 1), pretrained_weights=None, use_atten=False,
     conv_up2 = conv_block(merge2, num_channels=128, drop=drop, bn=bn)
 
     # convT3 = Conv2DTranspose(filters=64,kernel_size=(2, 2), padding='same', strides=(2,2))(conv_up2)
-    convT3 = UpSampling2D(size=(2,2))(conv_up2)
+    convT3 = UpSampling2D(size=(2, 2))(conv_up2)
     if use_atten:
         conv_down1 = attention_block(up_features=convT3, skip_features=conv_down1,F_int=256)
     merge3 = concatenate([convT3, conv_down1], axis=3)

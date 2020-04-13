@@ -2,6 +2,7 @@ from analyze.analyze_utils import *
 from analyze.post_processing_utils import *
 import matplotlib.pyplot as plt
 import random
+import json
 import cv2
 
 
@@ -16,36 +17,48 @@ import cv2
 
 # # compute dice score for all predictions after applying Chan Vesse algorithm:
 # if __name__ == '__main__':
-#     # ct_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL'
-#     ct_dir_path = '/cs/labs/josko/asherp7/follow_up/Chanvese/allFU'
-#     # roi_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL_liverSeg'
-#     roi_dir_path = '/cs/labs/josko/asherp7/follow_up/Chanvese/allFU_liverSegFixed'
-#     # prediction_dir_path = '/cs/labs/josko/asherp7/follow_up/outputs/all_predictions'
-#     prediction_dir_path = '/cs/labs/josko/asherp7/follow_up/Chanvese/allFU_segmentation_CNN_and_CV'
-#     # tumor_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allBL_onlytumors'
-#     tumor_dir_path = '/cs/labs/josko/aszeskin/Rafi_Tumor_data/allFU_newAndOldTumors'
-#     output_path = '/cs/labs/josko/asherp7/follow_up/outputs/processed_predictions'
-#     dice_dict = analyze_dataset(ct_dir_path, roi_dir_path, tumor_dir_path, prediction_dir_path)
-#     print('mean dice:', round(sum([x for x in dice_dict.values()]) / len(dice_dict), 3))
+#     prediction_dir_path = '/cs/labs/josko/asherp7/follow_up/outputs/validation_cnn_predictions_5_4_2020_2020-04-05_11-13-12/'
+#     data_dir_path = '/cs/labs/josko/asherp7/follow_up/data_3_4_2020'
+#     split = 'validation'
+#     # tumor_seg_dir_path = '/cs/labs/josko/asherp7/follow_up/all_combined_data/tumors'
+#     # print_tumor_burden_per_ct(tumor_seg_dir_path)
+#     dice_dict = analyze_dataset(data_dir_path, split, prediction_dir_path)
+#     print('mean dice:', round(sum([x for x in dice_dict.values()]) / len(dice_dict), 4))
+#
+#     # save dice dict:
+#     output_filename = os.path.join(prediction_dir_path, 'prediction_dice.json')
+#     with open(output_filename, 'w') as f:
+#         json.dump(dice_dict, f)
 
 
 # compute dice score for all predictions after thresholding and removing small connected components:
 if __name__ == '__main__':
-    prediction_dir_path = '/cs/labs/josko/asherp7/follow_up/outputs/cnn_predictions_2020-03-05_14-19-49'
-    data_root_path = '/cs/labs/josko/asherp7/follow_up/combined_data'
-    ct_dir_path = os.path.join(data_root_path, 'ct_scans')
-    roi_dir_path = os.path.join(data_root_path, 'liver_seg')
-    tumor_dir_path = os.path.join(data_root_path, 'tumors')
-    output_path = prediction_dir_path + '_remove_small_cc_limit_tumors_to_roi'
+    split = 'train'
+    # prediction_path = '/cs/labs/josko/asherp7/follow_up/outputs/pred_2020-03-26_10-20-24'
+    # data_dir_path = '/mnt/local/aszeskin/asher/liver_data/seperated_26_3'
+    # prediction_path = '/cs/labs/josko/asherp7/follow_up/outputs/validation_cnn_predictions_1_4_2020_2020-04-01_01-57-47'
+    # prediction_path = '/cs/labs/josko/asherp7/follow_up/outputs/train_cnn_predictions_1_4_2020_2020-04-01_02-21-07/'
+    # data_dir_path = '/cs/labs/josko/asherp7/follow_up/data_31_3_2020'
+    prediction_path = '/cs/labs/josko/asherp7/follow_up/outputs/train_cnn_predictions_5_4_2020_2020-04-05_12-10-11'
+    data_dir_path = '/cs/labs/josko/asherp7/follow_up/data_3_4_2020'
+    # prediction_path = '/cs/labs/josko/asherp7/follow_up/outputs/validation_cnn_predictions_5_4_2020_2020-04-05_11-13-12/'
     min_size = 80
+    # min_size = 100
     threshold = 933
-    dice_dict = analyze_dataset_after_threshold_and_filter_small_components(ct_dir_path,
-                                                                            roi_dir_path,
-                                                                            tumor_dir_path,
-                                                                            prediction_dir_path,
+    # threshold = 900
+    save_path = os.path.join(prediction_path, 'threshold_'+str(threshold)+'_cnn_predictions')
+    if not os.path.isdir(save_path):
+        os.mkdir(save_path)
+    dice_dict = analyze_dataset_after_threshold_and_filter_small_components(prediction_path,
+                                                                            data_dir_path,
                                                                             min_size,
-                                                                            threshold=threshold)
+                                                                            threshold=threshold,
+                                                                            save_path=save_path,
+                                                                            split=split)
     print(dice_dict)
+    output_filename = os.path.join(prediction_path, 'prediction_dice.json')
+    with open(output_filename, 'w') as f:
+        json.dump(dice_dict, f)
 
 
 # # check dice coefficient of prediction:

@@ -44,11 +44,8 @@ class Transform2h5:
     def get_ct_liver_tumor_filepaths_list(self):
         file_names_list = []
         for filename in os.listdir(self.nifti_dir_path):
-            tumor_file_path = os.path.join(self.tumor_data_path, filename.replace('.nii.gz', self.tumor_suffix+'.nii.gz'))
-            if filename.startswith('FU'):
-                extension = '.nii'
-            else:
-                extension = '.nii.gz'
+            extension = '.nii.gz'
+            tumor_file_path = os.path.join(self.tumor_data_path, filename.replace('.nii.gz', self.tumor_suffix+extension))
             roi_file_path = os.path.join(self.roi_path, filename.replace('.nii.gz', self.roi_suffix+extension))
             if not os.path.isfile(roi_file_path):
                 print(roi_file_path, 'is missing!')
@@ -157,33 +154,39 @@ class Transform2h5:
         non_tumor_patches_indices = []
         patch_labels = []
         mask_patch_list = []
+        center_idx = self.patch_size // 2
         patch_idx = 0
         for rotation in range(1 + self.added_rotations):
             if rotation > 0:
                 angle = np.random.uniform(-45, 45)
                 rotated_arr = scipy.ndimage.rotate(arr, angle)
             for z in range(depth):
-                for y in range(0, rows, self.sampling_step):
-                    for x in range(0, columns, self.sampling_step):
-                        if x + self.patch_size < columns and y + self.patch_size < rows:  # discard border patches
-                            if self.is_patch_center_in_mask(x, y, z, organ_segmentation):
-                                if self.is_patch_center_in_mask(x, y, z, tumor_segmentation):
-                                    patch_labels.append(1)  # center of patch belongs to tumor
-                                    tumor_patches_indices.append(patch_idx)
-                                else:
-                                    patch_labels.append(0)  # center of patch DOES NOT belong to tumor
-                                    non_tumor_patches_indices.append(patch_idx)
-                                if rotation == 0:
-                                    patch = arr[y:y+self.patch_size, x:x+self.patch_size, z]
-                                else:
-                                    patch = rotated_arr[y:y+self.patch_size, x:x+self.patch_size, z]
+                for y in range(-center_idx, rows-center_idx, self.sampling_step):
+                    for x in range(-center_idx, columns-center_idx, self.sampling_step):
+                        if self.is_patch_center_in_mask(x, y, z, organ_segmentation):
+                            if self.is_patch_center_in_mask(x, y, z, tumor_segmentation):
+                                patch_labels.append(1)  # center of patch belongs to tumor
+                                tumor_patches_indices.append(patch_idx)
+                            else:
+                                patch_labels.append(0)  # center of patch DOES NOT belong to tumor
+                                non_tumor_patches_indices.append(patch_idx)
+                            patch = np.zeros((self.patch_size, self.patch_size))
+                            # compute indices for indexing patch:
+                            y_min = max(0, -y)
+                            y_max = patch.shape[0] - max(0, y + self.patch_size - arr.shape[0])
+                            x_min = max(0, -x)
+                            x_max = patch.shape[1] - max(0, x + self.patch_size - arr.shape[1])
+                            if rotation == 0:
+                                patch[y_min:y_max, x_min:x_max] = arr[max(0, y):y + self.patch_size, max(0, x):x + self.patch_size, z]
+                            else:
+                                patch[y_min:y_max, x_min:x_max] = rotated_arr[max(0, y):y + self.patch_size, max(0, x):x + self.patch_size, z]
 
-                                if self.save_tumor_segmentation:  # save tumor segmentation for training unet model
-                                    mask_patch = tumor_segmentation[y:y+self.patch_size, x:x+self.patch_size, z]
-                                    mask_patch_list.append(mask_patch)
+                            if self.save_tumor_segmentation:  # save tumor segmentation for training unet model
+                                mask_patch = tumor_segmentation[max(0, y):y + self.patch_size, max(0, x):x + self.patch_size, z]
+                                mask_patch_list.append(mask_patch)
 
-                                patch_list.append(patch)
-                                patch_idx += 1
+                            patch_list.append(patch)
+                            patch_idx += 1
         return patch_list, patch_labels, tumor_patches_indices, non_tumor_patches_indices, mask_patch_list
 
     def create_h5_datasets(self, split=''):
@@ -254,8 +257,6 @@ class Transform2h5:
         with open(data_split_filepath, 'w') as fp:
             json.dump(data_split, fp, sort_keys=True, indent=4)
         print('saved training - validation split to:', data_split_filepath)
-
-
 
     def standardize_orientation(self, nifti):
         for i in range(3):
