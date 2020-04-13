@@ -20,6 +20,7 @@ def dice(gt_seg, estimated_seg):
 
     return 2. * intersection.sum() / (seg1.sum() + seg2.sum())
 
+
 def compute_TP_detections(pred, gt, min_diameter=0):
     tp_mask = np.logical_and(pred, gt)
     structure = ndimage.morphology.generate_binary_structure(tp_mask.ndim, tp_mask.ndim)
@@ -229,9 +230,11 @@ def compute_folder_detection_measures(pred_folder, data_root_path):
 
 
 if __name__ == '__main__':
-    data_path = '/cs/labs/josko/asherp7/follow_up/data_31_3_2020'
+    data_path = '/cs/labs/josko/asherp7/follow_up/data_3_4_2020'
+    pred_path = '/cs/labs/josko/asherp7/follow_up/outputs/validation_cnn_predictions_5_4_2020_2020-04-05_11-13-12/selection'
+    # data_path = '/cs/labs/josko/asherp7/follow_up/data_31_3_2020'
     # pred_path = '/cs/labs/josko/asherp7/follow_up/outputs/validation_cnn_predictions_1_4_2020_2020-04-01_01-57-47/selection'
-    pred_path = '/cs/labs/josko/asherp7/follow_up/outputs/validation_cnn_predictions_1_4_2020_2020-04-01_01-57-47/threshold_cnn_predictions'
+    # pred_path = '/cs/labs/josko/asherp7/follow_up/outputs/validation_cnn_predictions_1_4_2020_2020-04-01_01-57-47/threshold_cnn_predictions'
     # data_path = '/cs/labs/josko/asherp7/follow_up/validation_combined_data'
     # pred_path = '/cs/labs/josko/asherp7/follow_up/outputs/pred_2020-03-26_10-20-24/selection'
     compute_folder_detection_measures(pred_path, data_path)
